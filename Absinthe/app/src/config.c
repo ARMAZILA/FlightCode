@@ -445,7 +445,7 @@ static void resetFlashConfig(void)
 
     // gps/nav stuff
     cfg.gps_type 				= GPS_UBLOX;
-    cfg.gps_baudrate 			= 19200;
+    cfg.gps_baudrate 			= 38400;
     cfg.gps_wp_radius 			= 200;
     cfg.gps_lpf 				= 20;
     cfg.nav_slew_rate 			= 30;
