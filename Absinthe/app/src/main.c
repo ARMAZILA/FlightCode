@@ -99,18 +99,24 @@ portTASK_FUNCTION_PROTO(initTask, pvParameters)
 	if (cfg.gps_baudrate)
 		gpsInit(cfg.gps_baudrate);
 
+	/* Initialize tasks */
+	//			Task_func				        Task_name   Stack	   	 Param	 Prio			 Handler
+	xTaskCreate(signalTask,  	 (signed char *) "Signal",  256, (void *) NULL,  3, (xTaskHandle *) NULL);
+	xTaskCreate(mspTask,     	 (signed char *) "Serial",  512, (void *) NULL,  2, (xTaskHandle *) NULL);
+	xTaskCreate(mavlinkTask, 	 (signed char *) "MAVLink", 512, (void *) NULL,  2, (xTaskHandle *) NULL);
+
+	/* Initialize sensors. Do it before starting watch dog timer */
+	sensorsInit();
+
 	/* Init Watch-dog. Do not forget call IWDG_ReloadCounter() in time
 	   less then 250ms.  We do it in main loop - rcLoopTask */
 	wdgInit();
 
-	/* Initialize all tasks */
+	/* Initialize other tasks */
 	//			Task_func				        Task_name   Stack	   	 Param	 Prio			 Handler
-	xTaskCreate(signalTask,  	 (signed char *) "Signal",  256, (void *) NULL,  3, (xTaskHandle *) NULL);
 	xTaskCreate(sensorTask,  	 (signed char *) "Sensor",  256, (void *) NULL,  4, (xTaskHandle *) NULL);
 	xTaskCreate(rcLoopTask,  	 (signed char *) "rcLoop",  256, (void *) NULL,  3, (xTaskHandle *) NULL);
 	xTaskCreate(osdTask,     	 (signed char *) "OSD",     256, (void *) NULL,  3, (xTaskHandle *) NULL);
-	xTaskCreate(mspTask,     	 (signed char *) "Serial",  512, (void *) NULL,  2, (xTaskHandle *) NULL);
-	xTaskCreate(mavlinkTask, 	 (signed char *) "MAVLink", 512, (void *) NULL,  2, (xTaskHandle *) NULL);
 	xTaskCreate(sonarTask,       (signed char *) "Sonar",    48, (void *) NULL,  2, (xTaskHandle *) NULL);
 	xTaskCreate(powerSensorTask, (signed char *) "PwrSen",   48, (void *) NULL,  1, (xTaskHandle *) NULL);
 	xTaskCreate(navigateTask,  	 (signed char *) "Navi",    256, (void *) NULL,  3, (xTaskHandle *) NULL);

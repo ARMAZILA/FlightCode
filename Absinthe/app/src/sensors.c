@@ -39,7 +39,7 @@ void sensorsInit(void)
 	gyro_sensor.sample_count = 0;
 	gyro_sensor.overrun_count = 0;
 
-	// Init accelerometr and magnitometr
+	// Init accelerometer and magnitometer
 	lsm303dlhcConfig();
 	sensorsSet(SENSOR_ACC);
    	sensorsSet(SENSOR_MAG);
@@ -433,8 +433,7 @@ portTASK_FUNCTION_PROTO(sensorTask, pvParameters)
 	uint8_t baroSensorCycleCount = 0;
 	uint8_t magSensorCycleCount = 0;
 
-	// drop out any sensors that don't seem to work, init all the others. halt if gyro is dead.
-	sensorsInit();
+	/* Sensors alrady initialized in main.c */
 
 	imuInit();
 

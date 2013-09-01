@@ -180,7 +180,7 @@ void failureMode(uint8_t mode)
     {
 		signalLED(LED_ERR, LEDMODE_TOGGLE);
 		signalLED(LED_STS, LEDMODE_TOGGLE);
-        delay(475 * mode - 2);
+        delay(50 * mode - 2);
         buzzerOn();
         delay(25);
         buzzerOff();

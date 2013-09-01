@@ -164,7 +164,7 @@ INCLUDE_DIRS_BOOTLOADER = $(DIR_BOOTLOADER)/inc \
 ARCH_FLAGS = -mthumb -mcpu=cortex-m3 -g3 -ggdb
 
 # Optimization flag
-OPT_10dM3UOP88 = -Os
+OPT_10dM3UOP88 = -O0
 OPT_BOOTLOADER = -Os
 
 CFLAGS = -DUSE_STDPERIPH_DRIVER \

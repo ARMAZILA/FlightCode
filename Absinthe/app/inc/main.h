@@ -527,6 +527,7 @@ extern acc_sensor_t		acc_sensor;
 extern gyro_sensor_t	gyro_sensor;
 extern int16_t 			mag_sensor_data[3];
 extern uint16_t 		acc_1G;
+void sensorsInit(void);
 uint16_t batteryAdcToVoltage(uint16_t src);
 portTASK_FUNCTION_PROTO(sensorTask, pvParameters);
 portTASK_FUNCTION_PROTO(powerSensorTask, pvParameters);
