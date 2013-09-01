@@ -144,7 +144,6 @@ const param_value_t valueTable[] = {
 
     { "UART1_MODE",		VAR_UINT8,  &cfg.uart1_mode, 0, 1 },
     { "UART1_BAUDRATE",	VAR_UINT32, &cfg.uart1_baudrate, 1200, 115200 },
-
 };
 
 uint8_t valueTableCount = (sizeof(valueTable) / sizeof(valueTable[0]));

@@ -154,24 +154,57 @@ static void ml_send_1Hz(mavlink_channel_t chan)
 	);
 
 	mavlink_msg_sys_status_send(chan,
-		0x00007E17, // 111 1110 0001 0111 Controllers and sensors are present.
-		0x00007E17, // 111 1110 0001 0111 Controllers and sensors are enabled.
-		0x00007E17, // 111 1110 0001 0111 Controllers and sensors are operational or have an error.
-	// Value of 1: present. Indices: 0: 3D gyro, 1: 3D acc, 2: 3D mag, 3: absolute pressure,
-	// 4: differential pressure, 5: GPS, 6: optical flow, 7: computer vision position, 8: laser
-	// based position, 9: external ground-truth (Vicon or Leica). Controllers: 10: 3D angular
-	// rate control 11: attitude stabilization, 12: yaw position, 13: z/altitude control,
-	// 14: x/y position control, 15: motor outputs / control.
-		cycleTime / 10,	// Maximum usage in percent of the mainloop time, (0%: 0, 100%: 1000)
-		vbat * 100,		// Battery voltage, in millivolts (1 = 1 millivolt)
-		ibat / 10,		// Battery current, in 10*milliamperes (1 = 10 milliampere)
-		100,			// Remaining battery energy: (0%: 0, 100%: 100)
-		0,				// Communication drops in percent, (0%: 0, 100%: 10'000)
-		packet_drops[chan],	// Communication errors
-		0,				// Autopilot-specific errors
-		0,				// Autopilot-specific errors
-		0,				// Autopilot-specific errors
-		0				// Autopilot-specific errors
+/* Value of 1: present. Indices:
+	0: 3D gyro,
+	1: 3D acc,
+	2: 3D mag,
+	3: absolute pressure,
+	4: differential pressure,
+	5: GPS,
+	6: optical flow,
+	7: computer vision position,
+	8: laser based position,
+	9: external ground-truth (Vicon or Leica). Controllers:
+	10: 3D angular rate control
+	11: attitude stabilization,
+	12: yaw position,
+	13: z/altitude control,
+	14: x/y position control,
+	15: motor outputs / control. */
+
+		// Controllers and sensors are present.
+		1 << 0 |					// 3D gyro
+   		1 << 1 | 					// 3D acc
+   		1 << 2 |					// 3D mag
+   		1 << 4 |					// differential pressure
+   		(cfg.gps_baudrate ? 1 : 0) << 5 |	// GPS
+   		1 << 15,					// motor outputs / control
+
+   		// Controllers and sensors are enabled.
+		1 << 0 |					// 3D gyro
+   		1 << 1 | 					// 3D acc
+   		1 << 2 |					// 3D mag
+   		1 << 4 |					// differential pressure
+   		(cfg.gps_baudrate ? 1 : 0) << 5 |	// GPS
+   		1 << 15,					// motor outputs / control
+
+   		// Controllers and sensors are operational or have an error.
+		1 << 0 |					// 3D gyro
+   		1 << 1 | 					// 3D acc
+   		1 << 2 |					// 3D mag
+   		1 << 4 |					// differential pressure
+   		sensors(SENSOR_GPS) << 5 |	// GPS
+   		1 << 15,					// motor outputs / control
+   		cycleTime / 10,				// Maximum usage in percent of the mainloop time, (0%: 0, 100%: 1000)
+		vbat * 100,					// Battery voltage, in millivolts (1 = 1 millivolt)
+		ibat / 10,					// Battery current, in 10*milliamperes (1 = 10 milliampere)
+		100,						// Remaining battery energy: (0%: 0, 100%: 100)
+		0,							// Communication drops in percent, (0%: 0, 100%: 10'000)
+		packet_drops[chan],			// Communication errors
+		0,							// Autopilot-specific errors
+		0,							// Autopilot-specific errors
+		0,							// Autopilot-specific errors
+		0							// Autopilot-specific errors
 	);
 
 //	GPS_RAW_INT (#24)
