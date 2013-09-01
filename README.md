@@ -13,7 +13,7 @@ Used code and/or ideas of the following projects:
 
 To build application firmware use:
 	
-	make TARGET=10dM3UOP88
+    make TARGET=10dM3UOP88
 
 To build bootloader use:
 
@@ -21,9 +21,9 @@ To build bootloader use:
 
 Information about the project is available:
 
-	http://code.google.com/p/armazila/
-	https://github.com/ARMAZILA/FlightCode/tree/master/Absinthe
-    http://armazila.com/flight-controller
+http://code.google.com/p/armazila/
+https://github.com/ARMAZILA/FlightCode/tree/master/Absinthe
+http://armazila.com/flight-controller
 
 Copyright (C) 2013  Armazila
 
