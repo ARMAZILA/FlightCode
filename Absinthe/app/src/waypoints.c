@@ -5,9 +5,7 @@
  *
  */
 
-#include "main.h"
 #include "mavlink.h"
-#include "common/common.h"
 
 #define FLASH_WAYPOINT_ADDR        (0x08000000 + (uint32_t)0x0007F800)       // use sector 255 for storage
 #define	WPF_MAGIC					0xA55A
@@ -33,25 +31,16 @@ enum MAVLINK_WPM_CODES
 	MAVLINK_WPM_CODE_ENUM_END
 };
 
-#define MAVLINK_WPM_MAX_WP_COUNT	10
-
-/* Waypoint flash store structure */
-typedef struct wp_flash_store_t {
-	uint8_t	size;
-	mavlink_mission_item_t wp_list[MAVLINK_WPM_MAX_WP_COUNT];
-	uint8_t crc;
-	uint16_t magic;
-} wp_flash_store_t;
+enum MAVLINK_WPM_STATES current_state;
 
 wp_flash_store_t wpf;
-
-enum MAVLINK_WPM_STATES current_state;
 int16_t current_wp_id; ///< Waypoint in current transmission
 uint16_t current_count;
 uint8_t current_partner_sysid;
 uint8_t current_partner_compid;
 uint64_t timestamp_lastaction;
 int16_t current_active_wp_id;
+bool pos_reached;
 
 void wp_message_timeout(void)
 {
