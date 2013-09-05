@@ -2,11 +2,11 @@
 #include "main.h"
 
 static uint8_t numberMotor = 0;
-uint8_t useServo = 0;
+static uint8_t lastchanel = 8;
+static uint8_t useServo = 0;
+
 int16_t motor[MAX_MOTORS];
-int16_t servo[MAX_SERVOS]
-              = { 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500,
-            	  1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500 };
+int16_t servo[MAX_SERVOS];
 
 static motorMixer_t currentMixer[MAX_MOTORS];
 
@@ -137,6 +137,12 @@ void mixerInit(void)
 {
     int i;
 
+    for (i = 0; i < MAX_MOTORS; i++)
+    {
+    	servo[i] = 1500;
+    	motor[i] = 0;
+    }
+
     // enable servos for mixes that require them. note, this shifts motor counts.
     useServo = mixers[cfg.mixerConfiguration].useServo;
 
@@ -161,6 +167,11 @@ void mixerInit(void)
                 currentMixer[i] = mixers[cfg.mixerConfiguration].motor[i];
         }
     }
+
+    if (cfg.rcprotocol == RC_SPEKTRUM)
+    	lastchanel = 7;
+    else if (cfg.rcprotocol == RC_SBUS)
+    	lastchanel = 16;
 }
 
 void mixerLoadMix(int index)
@@ -180,57 +191,66 @@ void mixerLoadMix(int index)
     }
 }
 
-void writeServos(void)
-{
-    if (!useServo)
-        return;
-
-    switch (cfg.mixerConfiguration) {
-        case MULTITYPE_BI:
-        	pwmWrite(0, servo[4]);
-        	pwmWrite(1, servo[5]);
-            break;
-
-        case MULTITYPE_TRI:
-        	pwmWrite(0, servo[5]);
-            break;
-
-        case MULTITYPE_AIRPLANE:
-
-            break;
-
-        case MULTITYPE_FLYING_WING:
-        case MULTITYPE_GIMBAL:
-        	pwmWrite(1, servo[0]);
-        	pwmWrite(2, servo[1]);
-            break;
-
-        default:
-            // Two servos for SERVO_TILT, if enabled
-            if (cfg.gimbal) {
-            	pwmWrite(0, servo[0]);
-            	pwmWrite(1, servo[1]);
-            }
-            break;
-    }
-}
-
-void writeMotors(void)
+void mixerWrite(void)
 {
     uint8_t i;
+    uint8_t lastPWMoutput = 0;
 
+    // Sends commands to all motors
     for (i = 0; i < numberMotor; i++)
-    	pwmWrite(i, motor[i]);
+    {
+        pwmWrite(i, motor[i]);
+    }
+
+    lastPWMoutput = numberMotor;
+
+    if (useServo)
+    {
+		switch (cfg.mixerConfiguration) {
+			case MULTITYPE_BI:
+				pwmWrite(lastPWMoutput++, servo[4]);
+				pwmWrite(lastPWMoutput++, servo[5]);
+				break;
+
+			case MULTITYPE_TRI:
+				pwmWrite(lastPWMoutput++, servo[5]);
+				break;
+
+			case MULTITYPE_AIRPLANE:
+
+				break;
+
+			case MULTITYPE_FLYING_WING:
+			case MULTITYPE_GIMBAL:
+				pwmWrite(lastPWMoutput++, servo[0]);
+				pwmWrite(lastPWMoutput++, servo[1]);
+				break;
+
+			default:
+				// Two servos for SERVO_TILT, if enabled
+				if (cfg.gimbal) {
+					pwmWrite(lastPWMoutput++, servo[0]);
+					pwmWrite(lastPWMoutput++, servo[1]);
+				}
+				break;
+		}
+    }
+
+    // Translate other channels
+    for (i = lastPWMoutput; i < lastchanel; i++)
+        pwmWrite(i, rcReadRawFunc(i));
 }
 
-void writeAllMotors(int16_t mc)
+void mixerWwriteAllMotors(int16_t mc)
 {
     uint8_t i;
 
     // Sends commands to all motors
     for (i = 0; i < numberMotor; i++)
+    {
         motor[i] = mc;
-    writeMotors();
+        pwmWrite(i, mc);
+    }
 }
 
 static void airplaneMixer(void)
@@ -283,26 +303,27 @@ static void airplaneMixer(void)
 #endif
 }
 
-void mixTable(void)
+void mixerTable(void)
 {
     int16_t maxMotor;
     uint32_t i;
 
-    if (numberMotor > 3) {
+    if (numberMotor > 3)
+    {
         // prevent "yaw jump" during yaw correction
         axisPID[YAW] = constrain(axisPID[YAW], -100 - abs(rcCommand[YAW]), +100 + abs(rcCommand[YAW]));
     }
 
     // motors for non-servo mixes
-    if (numberMotor > 1)
-        for (i = 0; i < numberMotor; i++)
-            motor[i] = 	currentMixer[i].throttle * rcCommand[THROTTLE] +
-            			currentMixer[i].pitch    * axisPID[PITCH] +
-            			currentMixer[i].roll     * axisPID[ROLL ] +
-            			currentMixer[i].yaw      * axisPID[YAW  ] * cfg.yaw_direction;
+    for (i = 0; i < numberMotor; i++)
+    	motor[i] = 	currentMixer[i].throttle * rcCommand[THROTTLE] +
+           			currentMixer[i].pitch    * axisPID[PITCH] +
+           			currentMixer[i].roll     * axisPID[ROLL ] +
+           			currentMixer[i].yaw      * axisPID[YAW  ] * cfg.yaw_direction;
 
     // airplane / servo mixes
-    switch (cfg.mixerConfiguration) {
+    switch (cfg.mixerConfiguration)
+    {
         case MULTITYPE_BI:
             servo[4] = constrain(1500 + (cfg.yaw_direction * axisPID[YAW]) + axisPID[PITCH], 1020, 2000);   //LEFT
             servo[5] = constrain(1500 + (cfg.yaw_direction * axisPID[YAW]) - axisPID[PITCH], 1020, 2000);   //RIGHT
@@ -323,11 +344,14 @@ void mixTable(void)
 
         case MULTITYPE_FLYING_WING:
             motor[0] = rcCommand[THROTTLE];
-            if (flag(FLAG_PASSTHRU_MODE)) {
+            if (flag(FLAG_PASSTHRU_MODE))
+            {
                 // do not use sensors for correction, simple 2 channel mixing
                 servo[0]  = cfg.pitch_direction_l * (rcData[PITCH] - cfg.midrc) + cfg.roll_direction_l * (rcData[ROLL] - cfg.midrc);
                 servo[1]  = cfg.pitch_direction_r * (rcData[PITCH] - cfg.midrc) + cfg.roll_direction_r * (rcData[ROLL] - cfg.midrc);
-            } else {
+            }
+            else
+            {
                 // use sensors to correct (gyro only or gyro + acc)
                 servo[0]  = cfg.pitch_direction_l * axisPID[PITCH] + cfg.roll_direction_l * axisPID[ROLL];
                 servo[1]  = cfg.pitch_direction_r * axisPID[PITCH] + cfg.roll_direction_r * axisPID[ROLL];
@@ -338,22 +362,28 @@ void mixTable(void)
     }
 
     // do camstab
-    if (cfg.gimbal) {
+    if (cfg.gimbal)
+    {
         uint16_t aux[2] = { 0, 0 };
 
         if ((cfg.gimbal_flags & GIMBAL_NORMAL) || (cfg.gimbal_flags & GIMBAL_TILTONLY))
             aux[0] = rcData[AUX3] - cfg.midrc;
+
         if (!(cfg.gimbal_flags & GIMBAL_DISABLEAUX34))
             aux[1] = rcData[AUX4] - cfg.midrc;
 
         servo[0] = cfg.gimbal_pitch_mid + aux[0];
         servo[1] = cfg.gimbal_roll_mid + aux[1];
 
-        if (rcOptions[BOXCAMSTAB]) {
-            if (cfg.gimbal_flags & GIMBAL_MIXTILT) {
+        if (rcOptions[BOXCAMSTAB])
+        {
+            if (cfg.gimbal_flags & GIMBAL_MIXTILT)
+            {
                 servo[0] = (-cfg.gimbal_roll_gain) * angle[PITCH] / 16 - cfg.gimbal_roll_gain * angle[ROLL] / 16;
                 servo[1] = (-cfg.gimbal_roll_gain) * angle[PITCH] / 16 - cfg.gimbal_roll_gain * angle[ROLL] / 16;
-            } else {
+            }
+            else
+            {
                 servo[0] += cfg.gimbal_pitch_gain * angle[PITCH] / 16;
                 servo[1] += cfg.gimbal_roll_gain * angle[ROLL]  / 16;
             }
@@ -363,23 +393,32 @@ void mixTable(void)
         servo[1] = constrain(servo[1], cfg.gimbal_roll_min, cfg.gimbal_roll_max);
     }
 
-    if (cfg.gimbal_flags & GIMBAL_FORWARDAUX) {
+    if (cfg.gimbal_flags & GIMBAL_FORWARDAUX)
+    {
         int offset = 0;
+
         if (cfg.gimbal)
             offset = 2;
+
         for (i = 0; i < 4; i++)
         	pwmWrite(i + offset, rcData[AUX1 + i]);
     }
 
     maxMotor = motor[0];
+
     for (i = 1; i < numberMotor; i++)
         if (motor[i] > maxMotor)
             maxMotor = motor[i];
-    for (i = 0; i < numberMotor; i++) {
+
+    for (i = 0; i < numberMotor; i++)
+    {
         if (maxMotor > cfg.maxthrottle)     // this is a way to still have good gyro corrections if at least one motor reaches its max.
             motor[i] -= maxMotor - cfg.maxthrottle;
+
         motor[i] = constrain(motor[i], cfg.minthrottle, cfg.maxthrottle);
-        if ((rcData[THROTTLE]) < cfg.mincheck) {
+
+        if ((rcData[THROTTLE]) < cfg.mincheck)
+        {
             if (!cfg.motor_stop)
                 motor[i] = cfg.minthrottle;
             else

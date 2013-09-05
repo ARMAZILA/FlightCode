@@ -44,8 +44,6 @@
 
 #include "main.h"
 
-extern rcReadRawDataPtr rcReadRawFunc; // receive data from default (pwm/ppm) or additional (spek/sbus/?? receiver drivers)
-
 /* Receivers read functions */
 
 /* USB subsystem functions */
@@ -165,6 +163,6 @@ int main(void)
 void HardFault_Handler(void)
 {
     // fall out of the sky
-    writeAllMotors(cfg.mincommand);
+	mixerWwriteAllMotors(cfg.mincommand);
     while (1);
 }

@@ -494,6 +494,9 @@ portTASK_FUNCTION_PROTO(sensorTask, pvParameters)
 
 		stabilize(dTime);
 
+		mixerTable();
+		mixerWrite();
+
 		eTime = micros();
 		cycleTime = (int32_t) (eTime - sTime);
 

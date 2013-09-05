@@ -697,10 +697,6 @@ void stabilize(float dT)
 		DTerm = deltaSum * dynD8[axis] / 32.0f;
 		axisPID[axis] = PTerm + ITerm - DTerm;
 	}
-
-	mixTable();
-	writeServos();
-	writeMotors();
 }
 
 portTASK_FUNCTION_PROTO(rcLoopTask, pvParameters)

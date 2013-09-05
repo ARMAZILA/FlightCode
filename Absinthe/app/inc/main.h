@@ -504,6 +504,7 @@ extern int16_t _GPS_directionToHome;
 extern uint16_t _GPS_distanceToHome;
 
 // control
+extern rcReadRawDataPtr rcReadRawFunc; // receive data from default (pwm/ppm) or additional (spek/sbus/?? receiver drivers)
 int16_t rxReadRawRC(uint8_t chan);
 portTASK_FUNCTION_PROTO(rcLoopTask, pvParameters);
 void stabilize(float dT);
@@ -536,10 +537,13 @@ portTASK_FUNCTION_PROTO(sonarTask, pvParameters);
 // Output
 void mixerInit(void);
 void mixerLoadMix(int index);
+/*
 void writeServos(void);
 void writeMotors(void);
-void writeAllMotors(int16_t mc);
-void mixTable(void);
+*/
+void mixerWwriteAllMotors(int16_t mc);
+void mixerTable(void);
+void mixerWrite();
 
 // Serial
 void serialInit(uint32_t baudrate);

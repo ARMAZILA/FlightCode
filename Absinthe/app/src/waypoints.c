@@ -87,7 +87,7 @@ retry:
 
 	// Flash write failed - just die now
 	if (tries == 3) {
-		writeAllMotors(cfg.mincommand);
+		mixerWwriteAllMotors(cfg.mincommand);
 		failureMode(4);
 	}
 }

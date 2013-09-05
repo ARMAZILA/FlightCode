@@ -385,3 +385,8 @@ uint16_t pwmRead(uint8_t channel)
 {
     return captures[channel];
 }
+
+uint8_t pwmGetOutputNumber(void)
+{
+    return pwmoutputs;
+}

@@ -1,9 +1,5 @@
 #pragma once
 
-#define MAX_MOTORS  16
-#define MAX_SERVOS  16
-#define MAX_INPUTS  8
-
 // This indexes into the read-only hardware definition structure in drv_pwm.c, as well as into pwmPorts[] structure with dynamic data.
 enum {
     SERVO1 = 0,
@@ -25,6 +21,10 @@ enum {
     MAX_PORTS
 };
 
+#define MAX_MOTORS  MAX_PORTS
+#define MAX_SERVOS  MAX_PORTS
+#define MAX_INPUTS  8
+
 typedef struct {
 	uint8_t			pwmchan;
     GPIO_TypeDef   *gpio;
@@ -42,5 +42,5 @@ void pwmInit(uint8_t mode,
 		uint16_t pwm_group4_rate);
 void pwmWrite(uint8_t index, uint16_t value);
 uint16_t pwmRead(uint8_t channel);
+uint8_t pwmGetOutputNumber(void);
 
-// void pwmWrite(uint8_t channel, uint16_t value);
