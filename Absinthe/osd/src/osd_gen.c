@@ -130,12 +130,14 @@ void drawCircle(uint16_t x0, uint16_t y0, uint16_t radius)
 	}
 }
 
+/*
 void swap(uint16_t* a, uint16_t* b)
 {
 	uint16_t temp = *a;
 	*a = *b;
 	*b = temp;
 }
+*/
 
 const static int8_t sinData[91] =
 { 0, 2, 3, 5, 7, 9, 10, 12, 14, 16, 17, 19, 21, 22, 24, 26, 28, 29, 31, 33, 34,

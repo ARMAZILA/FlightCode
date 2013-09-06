@@ -622,4 +622,8 @@ bool vcpTransmitEmpty(uint8_t chan);
 // mavlink
 portTASK_FUNCTION_PROTO(mavlinkTask, pvParameters);
 
+// Simulator
+portTASK_FUNCTION_PROTO(simTask, pvParameters);
+
+
 #endif

@@ -5,9 +5,7 @@
  *      Author: Александр Горбачев
  */
 
-#include "main.h"
 #include "mavlink.h"
-#include "common/common.h"
 
 uint8_t system_mode = MAV_MODE_MANUAL_DISARMED; 	///< Booting up
 uint32_t custom_mode = 0; 							///< Custom mode, can be defined by user/adopter

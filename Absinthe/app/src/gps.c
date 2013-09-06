@@ -23,7 +23,7 @@ uint32_t gps_bytes_rx = 0;
 uint32_t gps_frames_rx = 0;
 
 xSemaphoreHandle gpsSemaphore = NULL;
-static xTimerHandle gpsLostTimer;
+xTimerHandle gpsLostTimer;
 
 #define GPS_UART			SERIAL_UART3
 
@@ -553,21 +553,17 @@ void GPS_NewData(uint16_t c)
     sensorsSet(SENSOR_GPS);
     xTimerReset(gpsLostTimer, 10);
 
-    if (GPS_update == 1)
-		GPS_update = 0;
-	else
-		GPS_update = 1;
+    GPS_update = (GPS_update == 1 ? 0 : 1);
 
-	if (!flag(FLAG_GPS_FIX) || GPS_numSat < 5)
-		return;
-
-//	gps_navigate();
-	xSemaphoreGive(gpsSemaphore);
+	if (flag(FLAG_GPS_FIX) && GPS_numSat > 4)
+		xSemaphoreGive(gpsSemaphore);
 }
 
+/* GPS signal lost timer callback function */
 void gpsLostTimerCallback(xTimerHandle pxTimer)
 {
     sensorsClear(SENSOR_GPS);
+    flagClear(FLAG_GPS_FIX);
 }
 
 void gpsInit(uint32_t baudrate)

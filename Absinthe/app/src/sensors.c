@@ -420,7 +420,7 @@ static void baroSensorUpdate(void)
  * This task only work with i2c sensors, so we don't need any semaphore
  * to manadge i2c bus resourse access.
  *
- * Sensor data rate:
+ * Sensor data rate        : update rate
  * Baro  - 25 Hz  - 40 ms  | 50 ms
  * Accel - 400 Hz - 2.5 ms | 10 ms
  * Mag   - 30 Hz  - 4.5 ms | 40 ms
@@ -451,25 +451,25 @@ portTASK_FUNCTION_PROTO(sensorTask, pvParameters)
 		sTime = micros();
 
 		// Read gyro sensor data each cycle 10 ms
-    	gyroSensorUpdate();
+    	//gyroSensorUpdate();
 
 		// Read accel sensor data each cycle
-		accSensorUpdate();
+		//accSensorUpdate();
 
-		// Baromert update with rate 50 ms
+		// Baromert update rate 50 ms
 		if (sensors(SENSOR_BARO) && (++baroSensorCycleCount == 5))
 		{
 			baroSensorCycleCount = 0;
-			baroSensorUpdate();
+			//baroSensorUpdate();
 
-			getEstimatedAltitude();
+			//getEstimatedAltitude();
 		}
 
-		// Magnitometer update with rate 40 ms
+		// Magnitometer update rate 40 ms
 		if (++magSensorCycleCount == 4)
 		{
 			magSensorCycleCount = 0;
-			magSensorUpdate();
+			//magSensorUpdate();
 		}
 
 		// XXX Time to read sensor
@@ -524,6 +524,7 @@ portTASK_FUNCTION_PROTO(powerSensorTask, pvParameters)
 	static uint16_t ibatTmp = 0;
 	static float ebatTmp = 0;
 	static uint8_t buzzerCycleCount = 0;
+
 	batteryInit();
 
 	// Initialise the xLastWakeTime variable with the current time.

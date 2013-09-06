@@ -54,6 +54,7 @@ SRC_10dM3UOP88 = $(DIR_APP)/src/main.c \
 	$(DIR_APP)/src/sbus.c \
 	$(DIR_APP)/src/sensors.c \
 	$(DIR_APP)/src/signal.c \
+	$(DIR_APP)/src/simulator.c \
 	$(DIR_APP)/src/spektrum.c \
 	$(DIR_APP)/src/syscalls.c \
 	$(DIR_APP)/src/waypoints.c \
