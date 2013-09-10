@@ -444,6 +444,10 @@ typedef enum {
 	FLAG_WDG_OCCURRED		= 1 << 30,	// System restarts by watchdog
 } AvailableFlags_t;
 
+typedef void (* serialSendByte_t)(uint8_t data);
+typedef uint8_t (* serialReadByte_t)(void);
+typedef uint16_t (* serialHasData_t)(void);
+
 extern int16_t	axisPID[3];
 extern int16_t	rcCommand[4];
 extern uint8_t	rcOptions[CHECKBOXITEMS];
@@ -452,7 +456,6 @@ extern int16_t	failsafeCnt;
 extern uint8_t	rssi;						// 0..255 -> 0%..100%
 extern int16_t 	debug[4];
 extern uint16_t cycleTime;
-extern uint16_t calibratingB;
 extern int32_t 	BaroAlt;
 extern int32_t 	BaroAltGround;
 extern int16_t 	sonarAlt;

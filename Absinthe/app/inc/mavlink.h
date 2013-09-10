@@ -33,20 +33,26 @@
  * @brief Send one char (uint8_t) over a comm channel
  *
  * @param chan MAVLink channel to use
- *  	MAVLINK_COMM_0 = VCP2
- *  	MAVLINK_COMM_1 = UART1
+ *  	MAVLINK_COMM_0 = UART1
+ *  	MAVLINK_COMM_1 = VCP1
+ *  	MAVLINK_COMM_2 = VCP2
  * @param ch Character to send
  */
 static inline void comm_send_ch(mavlink_channel_t chan, uint8_t ch)
 {
-	if (chan == MAVLINK_COMM_0)
+	switch (chan)
 	{
-		// Send to VCP2
+	case MAVLINK_COMM_0:
+		uartWrite(MAVLINK_UART, ch);	// UART1
+    	break;
+
+	case MAVLINK_COMM_1:
     	vcpSendByte(0, ch); // VCP1
-	}
-	else if (chan == MAVLINK_COMM_1)
-	{
-		uartWrite(MAVLINK_UART, ch);
+		break;
+
+	case MAVLINK_COMM_2:
+    	vcpSendByte(1, ch); // VCP2
+		break;
 	}
 }
 

@@ -86,10 +86,6 @@ typedef enum {
     HEADER_CMD,
 } c_state_t;
 
-typedef void (* com_port_tx)(uint8_t data);
-typedef uint8_t (* com_port_rx)(void);
-typedef uint16_t (* com_port_da)(void);
-
 typedef struct com_port_t {
     uint8_t checksum;
     uint8_t indRX;
@@ -98,9 +94,9 @@ typedef struct com_port_t {
     uint8_t offset;
     uint8_t dataSize;
     c_state_t c_state;
-    com_port_tx tx;
-    com_port_rx rx;
-    com_port_da da;	// Data Available
+    serialSendByte_t tx;
+    serialReadByte_t rx;
+    serialHasData_t da;	// Data Available
 } com_port_t;
 
 uint8_t cliMode = 0;

@@ -16,6 +16,9 @@ static int packet_drops[2] = { 0, 0 };
 
 extern volatile uint32_t sysTickUptime;
 
+serialReadByte_t	mlReadByte = NULL;
+serialHasData_t		mlHasData = NULL;
+
 // waypoints.c
 void wpInit(void);
 void wp_message_timeout(void);
@@ -27,40 +30,33 @@ void mp_message_handler(mavlink_channel_t chan, mavlink_message_t* msg);
 #include "fifo_buffer.h"
 
 #define	ML_RX_BUFFER_SIZE	32
-static t_fifo_buffer	ml_Rx_Buffer_Hnd;
-static uint8_t 			ml_Rx_Buffer[ML_RX_BUFFER_SIZE];
+static t_fifo_buffer		ml_Rx_Buffer_Hnd;
+static uint8_t 				ml_Rx_Buffer[ML_RX_BUFFER_SIZE];
 
-/* UART helper functions */
-static void mlCallback(uint16_t data)
+/* UART1 helper functions */
+static void mlCallback_uart1(uint16_t data)
 {
 	fifoBuf_putByte(&ml_Rx_Buffer_Hnd, data);
 }
 
-static uint16_t mlHasData(void)
+static uint16_t mlHasData_uart1(void)
 {
 	return (fifoBuf_getUsed(&ml_Rx_Buffer_Hnd) == 0) ? false : true;
 }
 
-static uint8_t mlRead(void)
+static uint8_t mlReadByte_uart1(void)
 {
     return fifoBuf_getByte(&ml_Rx_Buffer_Hnd);
 }
 
-static void mlInit(void)
+static uint8_t mlReadByte_vcp2(void)
 {
-	mavlink_system.sysid  = cfg.mavlink_sysid; 		///< ID 20 for this UAV
-	mavlink_system.compid = cfg.mavlink_compid; 	///< The component sending the message
-	// TODO: Decode MW mixer type
-	mavlink_system.type   = MAV_TYPE_QUADROTOR; 	///< This system is an quadrocopter.
+	return vcpGetByte(1);
+}
 
-	if (cfg.uart1_mode == UART1_MODE_MAVLINK)
-	{
-		fifoBuf_init(&ml_Rx_Buffer_Hnd, &ml_Rx_Buffer, ML_RX_BUFFER_SIZE);
-
-		uartInit(MAVLINK_UART, cfg.uart1_baudrate, mlCallback);
-		// TODO: Add UART1 support
-
-	}
+static uint16_t mlHasData_vcp2(void)
+{
+	return vcpHasData(1);
 }
 
 static void ml_send_25Hz(mavlink_channel_t chan)
@@ -463,19 +459,41 @@ static void ml_queued_send(mavlink_channel_t chan)
 
 /*
  * 	MAVLink protocol task
- * 	We use VCP2 and UART1 if configured
+ * 	We use VCP2 or UART1
  */
 portTASK_FUNCTION_PROTO(mavlinkTask, pvParameters)
 {
 	portTickType xLastWakeTime;
+	mavlink_channel_t chan;
 	uint8_t CycleCount1Hz = 0;
 	uint8_t CycleCount10Hz = 0;
 	uint8_t CycleCount25Hz = 0;
 	uint16_t CycleCount5Sec = 0;
 
-	mavlink_channel_t chan = 0;	// Use VCP2
+	mavlink_system.sysid  = cfg.mavlink_sysid; 		///< ID 20 for this UAV
+	mavlink_system.compid = cfg.mavlink_compid; 	///< The component sending the message
+	// TODO: Decode MW mixer type
+	mavlink_system.type   = MAV_TYPE_QUADROTOR; 	///< This system is an quadrocopter.
 
-	mlInit();
+	if (cfg.uart1_mode == UART1_MODE_MAVLINK)
+	{
+		fifoBuf_init(&ml_Rx_Buffer_Hnd, &ml_Rx_Buffer, ML_RX_BUFFER_SIZE);
+
+		uartInit(MAVLINK_UART, cfg.uart1_baudrate, mlCallback_uart1);
+
+		mlReadByte = mlReadByte_uart1;
+		mlHasData  = mlHasData_uart1;
+
+		chan = MAVLINK_COMM_0;	// Use UART1
+	}
+	else
+	{
+		mlReadByte = mlReadByte_vcp2;
+		mlHasData  = mlHasData_vcp2;
+
+		chan = MAVLINK_COMM_2;	// Use VCP2
+	}
+
 	wpInit();
 
 	// Initialise the xLastWakeTime variable with the current time.
@@ -486,9 +504,9 @@ portTASK_FUNCTION_PROTO(mavlinkTask, pvParameters)
         mavlink_message_t msg;
         mavlink_status_t status;
 
-    	while (vcpHasData(0))	// Check if VCP2 has data?
+    	while (mlHasData())	// Check if VCP2 has data?
     	{
-    		uint8_t c = vcpGetByte(0);	// Get VCP2 data byte
+    		uint8_t c = mlReadByte();	// Get VCP2 data byte
 
     		if (mavlink_parse_char(chan, c, &msg, &status))
     		{

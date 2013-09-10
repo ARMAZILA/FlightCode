@@ -47,6 +47,10 @@ typedef enum {
     PAYLOAD,
 } c_state_t;
 
+serialSendByte_t 	simSendByte = NULL;
+serialReadByte_t	simReadByte = NULL;
+serialHasData_t		simHasData = NULL;
+
 static bool sim_parse_char(uint8_t c, char * inBuf)
 {
 	static uint8_t	bufferIndex = 0;
@@ -127,36 +131,79 @@ static void simSendBin(void)
 }
 #endif
 
+static void simSendByte_vcp2(uint8_t data)
+{
+	vcpSendByte(1, data);
+}
+
+static uint8_t simReadByte_vcp2(void)
+{
+	return vcpGetByte(1);
+}
+
+static uint16_t simHasData_vcp2(void)
+{
+	return vcpHasData(1);
+}
+
 static void simPrint(char *str)
 {
     while (*str)
-    	vcpSendByte(1, *(str++));
+    	simSendByte(*(str++));
 }
 
 static void simSendTxt(void)
 {
 	char buf[12];
 
-	ftoa(1.0, buf);			// Throttle0
-	simPrint(buf);
-	vcpSendByte(1, '\t');
+	switch(cfg.mixerConfiguration)
+	{
+	case MULTITYPE_QUADP:
+		// Use armazila.quad.xml protocol congiguration file
+		ftoa(1.0, buf);			// Throttle0 (all values 0...1)
+		simPrint(buf);
+		simSendByte('\t');
 
-	ftoa(0.95, buf);		// Throttle1
-	simPrint(buf);
-	vcpSendByte(1, '\t');
+		ftoa(0.95, buf);		// Throttle1
+		simPrint(buf);
+		simSendByte('\t');
 
-	ftoa(0.9, buf);			// Throttle2
-	simPrint(buf);
-	vcpSendByte(1, '\t');
+		ftoa(0.9, buf);			// Throttle2
+		simPrint(buf);
+		simSendByte('\t');
 
-	ftoa(0.85, buf);		// Throttle3
-	simPrint(buf);
-	simPrint("\r\n");
+		ftoa(0.85, buf);		// Throttle3
+		simPrint(buf);
+		simPrint("\r\n");
+	break;
+
+	case MULTITYPE_FLYING_WING:
+		// Use armazila.wing.xml protocol congiguration file
+		ftoa(0.1, buf);			// Left aileron (-1...1)
+		simPrint(buf);
+		simSendByte('\t');
+
+		ftoa(-0.1, buf);		// Right aileron (-1...1)
+		simPrint(buf);
+		simSendByte('\t');
+
+		ftoa(0.5, buf);			// Throttle (0...1)
+		simPrint(buf);
+		simPrint("\r\n");
+
+		break;
+	}
+
 }
 
 /*
- * 	Simulator protocol task
+ * 	Flightgear flight simulator generic protocol task
+ * 	Use armazila.quad.xml protocol congiguration file for mixer type QUADP
+ *	Use armazila.wing.xml protocol congiguration file for mixer type FLYING_WING
  * 	We use VCP2 or UART1 if configured
+ *
+ * 	an error is detected in flightgear 2.10. Description here:
+ * 	http://code.google.com/p/flightgear-bugs/issues/detail?id=1191
  */
 portTASK_FUNCTION_PROTO(simTask, pvParameters)
 {
@@ -166,17 +213,21 @@ portTASK_FUNCTION_PROTO(simTask, pvParameters)
 	uint8_t gpsCycleCount = 0;
 	uint8_t sendCycleCount = 0;
 
+	simSendByte = simSendByte_vcp2;
+	simReadByte = simReadByte_vcp2;
+	simHasData  = simHasData_vcp2;
+
 	// Initialise the xLastWakeTime variable with the current time.
 	xLastWakeTime = xTaskGetTickCount();
 
     while (1)
     {
 
-    	while (vcpHasData(1))	// Check if VCP2 has data?
+    	while (simHasData())	// Check if SIM port has data?
     	{
     		uint8_t ch;
 
-    		ch = vcpGetByte(1);	// Get VCP2 data byte
+    		ch = simReadByte();	// Get SIM port data byte
 
     		if (sim_parse_char(ch, (char *) packet))
     		{
