@@ -486,9 +486,9 @@ portTASK_FUNCTION_PROTO(mavlinkTask, pvParameters)
         mavlink_message_t msg;
         mavlink_status_t status;
 
-    	while (vcpHasData(1))	// Check if VCP2 has data?
+    	while (vcpHasData(0))	// Check if VCP2 has data?
     	{
-    		uint8_t c = vcpGetByte(1);	// Get VCP2 data byte
+    		uint8_t c = vcpGetByte(0);	// Get VCP2 data byte
 
     		if (mavlink_parse_char(chan, c, &msg, &status))
     		{

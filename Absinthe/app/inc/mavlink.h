@@ -42,7 +42,7 @@ static inline void comm_send_ch(mavlink_channel_t chan, uint8_t ch)
 	if (chan == MAVLINK_COMM_0)
 	{
 		// Send to VCP2
-    	vcpSendByte(1, ch);
+    	vcpSendByte(0, ch); // VCP1
 	}
 	else if (chan == MAVLINK_COMM_1)
 	{

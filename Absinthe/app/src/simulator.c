@@ -47,8 +47,7 @@ typedef enum {
     PAYLOAD,
 } c_state_t;
 
-
-bool sim_parse_char(uint8_t c, char * inBuf)
+static bool sim_parse_char(uint8_t c, char * inBuf)
 {
 	static uint8_t	bufferIndex = 0;
 	static uint8_t state = IDLE;
@@ -94,17 +93,65 @@ bool sim_parse_char(uint8_t c, char * inBuf)
 	return false;
 }
 
-
 static float swap_float(float f) {
     char *c = (char *) &f;
     return * (float *) (char[]) {c[3], c[2], c[1], c[0] };
 }
 
-void simSend(void)
+#if 0
+static void simSend32(uint32_t data)
 {
-	sim_pack_out_t buf;
+	uint8_t port = 1;
 
-	buf.aileron = swap_float((servo[0] -1502) / 500.0f );
+	vcpSendByte(port, (data >> 24) & 0xFF);
+	vcpSendByte(port, (data >> 16) & 0xFF);
+	vcpSendByte(port, (data >>  8) & 0xFF);
+	vcpSendByte(port, (data      ) & 0xFF);
+}
+
+static void simSendBin(void)
+{
+	float data;
+
+	data = 1.0;
+	simSend32((uint32_t) data);
+
+	data = 0.9;
+	simSend32((uint32_t) data);
+
+	data = 0.5;
+	simSend32((uint32_t) data);
+
+	data = 0.2;
+	simSend32((uint32_t) data);	// Throttle
+}
+#endif
+
+static void simPrint(char *str)
+{
+    while (*str)
+    	vcpSendByte(1, *(str++));
+}
+
+static void simSendTxt(void)
+{
+	char buf[12];
+
+	ftoa(1.0, buf);			// Throttle0
+	simPrint(buf);
+	vcpSendByte(1, '\t');
+
+	ftoa(0.95, buf);		// Throttle1
+	simPrint(buf);
+	vcpSendByte(1, '\t');
+
+	ftoa(0.9, buf);			// Throttle2
+	simPrint(buf);
+	vcpSendByte(1, '\t');
+
+	ftoa(0.85, buf);		// Throttle3
+	simPrint(buf);
+	simPrint("\r\n");
 }
 
 /*
@@ -115,11 +162,9 @@ portTASK_FUNCTION_PROTO(simTask, pvParameters)
 {
 	portTickType xLastWakeTime;
 	uint8_t inBuf[sizeof(sim_pack_in_t)];
-	uint8_t ch;
 	sim_pack_in_t * packet = (sim_pack_in_t *) &inBuf[0];
 	uint8_t gpsCycleCount = 0;
 	uint8_t sendCycleCount = 0;
-
 
 	// Initialise the xLastWakeTime variable with the current time.
 	xLastWakeTime = xTaskGetTickCount();
@@ -129,6 +174,8 @@ portTASK_FUNCTION_PROTO(simTask, pvParameters)
 
     	while (vcpHasData(1))	// Check if VCP2 has data?
     	{
+    		uint8_t ch;
+
     		ch = vcpGetByte(1);	// Get VCP2 data byte
 
     		if (sim_parse_char(ch, (char *) packet))
@@ -187,7 +234,7 @@ portTASK_FUNCTION_PROTO(simTask, pvParameters)
     	if (++sendCycleCount == 5)
 		{
 			sendCycleCount = 0;
-			simSend();
+			simSendTxt();
 		}
 
 	    // Wait for the next cycle.
