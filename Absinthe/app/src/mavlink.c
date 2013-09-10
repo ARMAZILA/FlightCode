@@ -483,14 +483,12 @@ portTASK_FUNCTION_PROTO(mavlinkTask, pvParameters)
 
 		mlReadByte = mlReadByte_uart1;
 		mlHasData  = mlHasData_uart1;
-
 		chan = MAVLINK_COMM_0;	// Use UART1
 	}
 	else
 	{
 		mlReadByte = mlReadByte_vcp2;
 		mlHasData  = mlHasData_vcp2;
-
 		chan = MAVLINK_COMM_2;	// Use VCP2
 	}
 

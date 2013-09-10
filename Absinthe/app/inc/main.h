@@ -123,6 +123,7 @@ typedef enum {
 typedef enum {
     UART1_MODE_MSP = 0,
     UART1_MODE_MAVLINK,
+    UART1_MODE_HIL,
 } UART1_MODE_t;
 
 typedef struct gpio_config_t
@@ -305,14 +306,18 @@ typedef struct config_t {
 
     int16_t  	angleTrim[2];               // accelerometer trim
     uint8_t  	imu_algorithm;				// select imu calculation algoritm
+    uint8_t		hil_mode;					// Hardware-in-the-loop simulation mode
+    										// 0 - HIL off
+    										// 1 - sensor off
+    										// 2 - sensor & IMU off
 
-    uint16_t activate[CHECKBOXITEMS];       // activate switches
-    uint8_t  batvscale;                     // adjust this to match battery voltage to reported value
-    uint8_t  batmaxcellvoltage;             // maximum voltage per cell, used for auto-detecting battery voltage in 0.1V units, default is 43 (4.3V)
-    uint8_t  batmincellvoltage;             // minimum voltage per cell, this triggers battery out alarms, in 0.1V units, default is 33 (3.3V)
-    uint8_t  batiscale;                     // adjust this to match battery current to reported value
-    int16_t  batioffset;                    // adjust this to match battery current offset to reported value
-    uint8_t	 batalarm;						// Enable/disable low battery warning sound
+    uint16_t 	activate[CHECKBOXITEMS];    // activate switches
+    uint8_t  	batvscale;                  // adjust this to match battery voltage to reported value
+    uint8_t  	batmaxcellvoltage;          // maximum voltage per cell, used for auto-detecting battery voltage in 0.1V units, default is 43 (4.3V)
+    uint8_t  	batmincellvoltage;          // minimum voltage per cell, this triggers battery out alarms, in 0.1V units, default is 33 (3.3V)
+    uint8_t  	batiscale;                  // adjust this to match battery current to reported value
+    int16_t  	batioffset;                 // adjust this to match battery current offset to reported value
+    uint8_t	 	batalarm;					// Enable/disable low battery warning sound
 
     // Radio/ESC-related configuration
     uint8_t 	rcprotocol;					// Radio protocol mode PWM/PPM/SPEKTRUM/SBUS

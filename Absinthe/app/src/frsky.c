@@ -173,10 +173,10 @@ enum FRSKY_TWP_STATES
 	FRSKY_TWP_STATE_ENUM_END
 };
 
-#define START_STOP      0x7e
-#define BYTESTUFF       0x7d
-#define STUFF_MASK      0x20
-#define FRSKY_RX_PACKET_SIZE 18
+#define START_STOP      		0x7e
+#define BYTESTUFF       		0x7d
+#define STUFF_MASK      		0x20
+#define FRSKY_RX_PACKET_SIZE	18
 
 uint8_t frskyRxBuffer[FRSKY_RX_PACKET_SIZE];   // Receive buffer. 9 bytes (full packet), worst case 18 bytes with byte-stuffing (+1)
 
@@ -243,7 +243,7 @@ void frskyCallback(uint16_t data)
 	} // switch
 }
 
-// Task for send FrSky telemetry
+// Task sends FrSky telemetry
 portTASK_FUNCTION_PROTO(frskyTask, pvParameters)
 {
 	portTickType xLastWakeTime;

@@ -47,6 +47,14 @@ typedef enum {
     PAYLOAD,
 } c_state_t;
 
+#include "fifo_buffer.h"
+
+#define	ML_RX_BUFFER_SIZE	32
+static t_fifo_buffer		sim_Rx_Buffer_Hnd;
+static uint8_t 				sim_Rx_Buffer[ML_RX_BUFFER_SIZE];
+
+#define SIM_VCP_PORT		0 	// Use VCP1
+
 serialSendByte_t 	simSendByte = NULL;
 serialReadByte_t	simReadByte = NULL;
 serialHasData_t		simHasData = NULL;
@@ -131,19 +139,40 @@ static void simSendBin(void)
 }
 #endif
 
-static void simSendByte_vcp2(uint8_t data)
+/* UART1 helper functions */
+static void simSendByte_uart1(uint8_t data)
 {
-	vcpSendByte(1, data);
+	uartWrite(SERIAL_UART1, data);	// UART1
 }
 
-static uint8_t simReadByte_vcp2(void)
+static void simCallback_uart1(uint16_t data)
 {
-	return vcpGetByte(1);
+	fifoBuf_putByte(&sim_Rx_Buffer_Hnd, data);
 }
 
-static uint16_t simHasData_vcp2(void)
+static uint16_t simHasData_uart1(void)
 {
-	return vcpHasData(1);
+	return (fifoBuf_getUsed(&sim_Rx_Buffer_Hnd) == 0) ? false : true;
+}
+
+static uint8_t simReadByte_uart1(void)
+{
+    return fifoBuf_getByte(&sim_Rx_Buffer_Hnd);
+}
+
+static void simSendByte_vcp(uint8_t data)
+{
+	vcpSendByte(SIM_VCP_PORT, data);
+}
+
+static uint8_t simReadByte_vcp(void)
+{
+	return vcpGetByte(SIM_VCP_PORT);
+}
+
+static uint16_t simHasData_vcp(void)
+{
+	return vcpHasData(SIM_VCP_PORT);
 }
 
 static void simPrint(char *str)
@@ -213,16 +242,28 @@ portTASK_FUNCTION_PROTO(simTask, pvParameters)
 	uint8_t gpsCycleCount = 0;
 	uint8_t sendCycleCount = 0;
 
-	simSendByte = simSendByte_vcp2;
-	simReadByte = simReadByte_vcp2;
-	simHasData  = simHasData_vcp2;
+	if (cfg.uart1_mode == UART1_MODE_HIL)
+	{
+		fifoBuf_init(&sim_Rx_Buffer_Hnd, &sim_Rx_Buffer, ML_RX_BUFFER_SIZE);
+
+		uartInit(SERIAL_UART1, cfg.uart1_baudrate, simCallback_uart1);
+
+		simSendByte = simSendByte_uart1;
+		simReadByte = simReadByte_uart1;
+		simHasData  = simHasData_uart1;
+	}
+	else
+	{
+		simSendByte = simSendByte_vcp;
+		simReadByte = simReadByte_vcp;
+		simHasData  = simHasData_vcp;
+	}
 
 	// Initialise the xLastWakeTime variable with the current time.
 	xLastWakeTime = xTaskGetTickCount();
 
     while (1)
     {
-
     	while (simHasData())	// Check if SIM port has data?
     	{
     		uint8_t ch;
@@ -232,10 +273,20 @@ portTASK_FUNCTION_PROTO(simTask, pvParameters)
     		if (sim_parse_char(ch, (char *) packet))
     		{
     			// Aply value from simulator
-    			EstAlt 				= swap_float(packet->alt);
+    			// 0 - HIL off
+    		    // 1 - sensor off
+    		    // 2 - sensor & IMU off
 
-    			heading 			= swap_float(packet->head);
-    			heading_rad			= DEG2RAD(swap_float(packet->head));
+    			if (cfg.hil_mode == 2)
+    			{
+        			angle[ROLL ]		= swap_float(packet->roll) * 10;
+        			angle[PITCH]		= -swap_float(packet->pitch) * 10;
+        			angle_rad[ROLL ]	= DEG2RAD(swap_float(packet->roll));
+        			angle_rad[PITCH]	= -DEG2RAD(swap_float(packet->pitch));
+        			heading 			= swap_float(packet->head);
+        			heading_rad			= DEG2RAD(swap_float(packet->head));
+        			EstAlt 				= swap_float(packet->alt);
+    			}
 
     		    accSmooth[ROLL ]	= swap_float(packet->acc_x) / 9.80665f * acc_1G;
     		    accSmooth[PITCH] 	= swap_float(packet->acc_y) / 9.80665f * acc_1G;
@@ -244,11 +295,6 @@ portTASK_FUNCTION_PROTO(simTask, pvParameters)
     			gyroData[ROLL ]		= swap_float(packet->gyro_x);
     			gyroData[PITCH]		= swap_float(packet->gyro_y);
     			gyroData[YAW  ]		= swap_float(packet->gyro_z);
-
-    			angle[ROLL ]		= swap_float(packet->roll) * 10;
-    			angle[PITCH]		= -swap_float(packet->pitch) * 10;
-    			angle_rad[ROLL ]	= DEG2RAD(swap_float(packet->roll));
-    			angle_rad[PITCH]	= -DEG2RAD(swap_float(packet->pitch));
 
     			if (gpsCycleCount == 20)
     			{
@@ -260,20 +306,15 @@ portTASK_FUNCTION_PROTO(simTask, pvParameters)
 	    			GPS_altitude		= swap_float(packet->alt) / 10.0f;
 	    			GPS_speed			= swap_float(packet->groundspeed);
 	    			GPS_ground_course 	= swap_float(packet->head) * 10;
-
+	    		    GPS_update 			= (GPS_update == 1 ? 0 : 1);
+	    		    GPS_numSat 			= 12;
+	    		    GPS_hdop 			= 1;
 	    			gps_frames_rx ++;
 
 	    		    sensorsSet(SENSOR_GPS);
-
-	    		    xTimerReset(gpsLostTimer, 10);
-
-	    		    GPS_update = (GPS_update == 1 ? 0 : 1);
-
 	    		    flagSet(FLAG_GPS_FIX);
 
-	    		    GPS_numSat = 12;
-	    		    GPS_hdop = 1;
-
+	    		    xTimerReset(gpsLostTimer, 10);
 	    		    xSemaphoreGive(gpsSemaphore);
     			}
     		}

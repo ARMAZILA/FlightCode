@@ -141,6 +141,7 @@ const param_value_t valueTable[] = {
     { "OSD_DIS",		VAR_UINT16, &_GPS_distanceToHome, 0, 10000 },
 
     { "IMUALGORITHM",	VAR_UINT8, 	&cfg.imu_algorithm, 1, 4 },
+    { "HIL_MODE",		VAR_UINT8, 	&cfg.hil_mode, 0, 2 },
 
     { "UART1_MODE",		VAR_UINT8,  &cfg.uart1_mode, 0, 1 },
     { "UART1_BAUDRATE",	VAR_UINT32, &cfg.uart1_baudrate, 1200, 115200 },
@@ -459,6 +460,8 @@ static void resetFlashConfig(void)
 
     cfg.uart1_mode				= 0;	// MSP
     cfg.uart1_baudrate			= 115200;
+
+    cfg.hil_mode				= 0;
 
     cfg.mavlink_sysid			= 20;
     cfg.mavlink_compid			= 200;

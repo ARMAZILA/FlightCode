@@ -102,7 +102,8 @@ portTASK_FUNCTION_PROTO(initTask, pvParameters)
 	xTaskCreate(signalTask,  	 (signed char *) "Signal",  256, (void *) NULL,  3, (xTaskHandle *) NULL);
 //	xTaskCreate(mspTask,     	 (signed char *) "Serial",  512, (void *) NULL,  2, (xTaskHandle *) NULL);
 
-	xTaskCreate(simTask, 	 	 (signed char *) "HITL",    512, (void *) NULL,  2, (xTaskHandle *) NULL);
+	if (cfg.hil_mode)
+		xTaskCreate(simTask, 	 (signed char *) "HITL",    512, (void *) NULL,  2, (xTaskHandle *) NULL);
 
 	xTaskCreate(mavlinkTask, 	 (signed char *) "MAVLink", 512, (void *) NULL,  2, (xTaskHandle *) NULL);
 
