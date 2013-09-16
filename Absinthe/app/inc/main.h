@@ -121,9 +121,9 @@ typedef enum {
 
 // UART1 mode
 typedef enum {
-    UART1_MODE_MSP = 0,
-    UART1_MODE_MAVLINK,
-    UART1_MODE_HIL,
+    UART1_MODE_MSP = 0,		// UART1 -> MSP, 	 VCP1 -> SIM, VCP2 -> MAVLINK
+    UART1_MODE_MAVLINK,		// UART1 -> MAVLINK, VCP1 -> MSP, VCP2 -> SYM
+    UART1_MODE_HIL,			// UART1 -> SIM, 	 VCP1 -> MSP, VCP2 -> MAVLINK
 } UART1_MODE_t;
 
 typedef struct gpio_config_t
@@ -392,7 +392,7 @@ typedef struct config_t {
     uint8_t 	osd_screen;					// OSD screen number
     uint16_t 	wdg_counter;				// Watch-dog reboot event counter
 
-    uint8_t 	uart1_mode;					// UART1 mode: MSP/MAVLink
+    uint8_t 	uart1_mode;					// UART1 mode: see UART1_MODE_t ENUM
     uint32_t 	uart1_baudrate;				// UART1 baudrate
 
     uint8_t		mavlink_sysid;				// MAVLink system ID

@@ -450,32 +450,34 @@ portTASK_FUNCTION_PROTO(sensorTask, pvParameters)
 		uint32_t sTime, eTime;
 		sTime = micros();
 
-		// Read gyro sensor data each cycle 10 ms
-    	//gyroSensorUpdate();
+		if (cfg.hil_mode == 0) {
+			// Read gyro sensor data each cycle 10 ms
+			gyroSensorUpdate();
 
-		// Read accel sensor data each cycle
-		//accSensorUpdate();
+			// Read accel sensor data each cycle
+			accSensorUpdate();
 
-		// Baromert update rate 50 ms
-		if (sensors(SENSOR_BARO) && (++baroSensorCycleCount == 5))
-		{
-			baroSensorCycleCount = 0;
-			//baroSensorUpdate();
+			// Baromert update rate 50 ms
+			if (++baroSensorCycleCount == 5)
+			{
+				baroSensorCycleCount = 0;
+				baroSensorUpdate();
+				getEstimatedAltitude();
+			}
 
-			//getEstimatedAltitude();
-		}
-
-		// Magnitometer update rate 40 ms
-		if (++magSensorCycleCount == 4)
-		{
-			magSensorCycleCount = 0;
-			//magSensorUpdate();
+			// Magnitometer update rate 40 ms
+			if (++magSensorCycleCount == 4)
+			{
+				magSensorCycleCount = 0;
+				magSensorUpdate();
+			}
 		}
 
 		// XXX Time to read sensor
 		eTime = micros();
 		debug[3] = (int32_t) (eTime - sTime);
 
+		// TODO: Switch off IMU by cfg.hil_mode
 		switch (cfg.imu_algorithm)
 		{
 		case 1:
@@ -495,6 +497,7 @@ portTASK_FUNCTION_PROTO(sensorTask, pvParameters)
 		stabilize(dTime);
 
 		mixerTable();
+
 		mixerWrite();
 
 		eTime = micros();

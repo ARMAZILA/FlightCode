@@ -94,16 +94,10 @@ void mp_message_handler(mavlink_channel_t chan, mavlink_message_t* msg)
 	// Handle message
 	switch (msg->msgid)
 	{
-	case MAVLINK_MSG_ID_COMMAND_LONG:
-	{
-		mavlink_command_long_t cl;
-		mavlink_msg_command_long_decode(msg, &cl);
 
-		sprintf(buf, "Mission: Msg COMMAND_LONG. Command (%u)", cl.command);
-		mavlink_msg_statustext_send(chan, MAV_SEVERITY_INFO, buf);
-
+	default:
+//		sprintf(buf, "Mission: Unknown message type received (%u)", msg->msgid);
+//		mavlink_msg_statustext_send(chan, MAV_SEVERITY_INFO, buf);
 		break;
-	} // case MAVLINK_MSG_ID_COMMAND_LONG
-
 	} // switch (msg->msgid)
 }

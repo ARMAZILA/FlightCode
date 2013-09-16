@@ -76,7 +76,7 @@ static const char pidnames[] =
     "MAG;"
     "VEL;";
 
-// State mashine code
+// MSP protocol state mashine code
 typedef enum {
     IDLE,
     HEADER_START,
@@ -100,8 +100,7 @@ typedef struct com_port_t {
 } com_port_t;
 
 uint8_t cliMode = 0;
-static uint8_t portNumber = 1;
-static com_port_t com_drv[2];
+static com_port_t com_drv[1];
 #define MSP_UART		SERIAL_UART1 // VCP1 is the same value 0!!!
 
 void serialize8(uint8_t port, uint8_t a)
@@ -424,104 +423,85 @@ static void evaluateOtherData(uint8_t sr)
 void serialCom(void)
 {
     uint8_t c;
-    uint8_t port;
+    uint8_t port = 0;
 
-    for (port = 0; port < portNumber; port++)
-    {
-        // in cli mode, all uart stuff goes to here. enter cli mode by sending #.
-    	// NOTE: cli support only on VCP
-        if (port == 0 && cliMode) {
-            cliProcess();
-            return;
-        }
+	// in cli mode, all uart stuff goes to here. enter cli mode by sending #.
+	if (cliMode) {
+		cliProcess();
+		return;
+	}
 
-        while (com_drv[port].da())
-		{
-			c = com_drv[port].rx();
+	while (com_drv[port].da())
+	{
+		c = com_drv[port].rx();
 
-			if (com_drv[port].c_state == IDLE) {
-				com_drv[port].c_state = (c == '$') ? HEADER_START : IDLE;
-				if (com_drv[port].c_state == IDLE && port == 0)
-					evaluateOtherData(c);				// evaluate all other incoming serial data
-			} else if (com_drv[port].c_state == HEADER_START) {
-				com_drv[port].c_state = (c == 'M') ? HEADER_M : IDLE;
-			} else if (com_drv[port].c_state == HEADER_M) {
-				com_drv[port].c_state = (c == '<') ? HEADER_ARROW : IDLE;
-			} else if (com_drv[port].c_state == HEADER_ARROW) {
-				if (c > INBUF_SIZE) {					// now we are expecting the payload size
-					com_drv[port].c_state = IDLE;
-					continue;
-				}
-				com_drv[port].dataSize = c;
-				com_drv[port].offset = 0;
-				com_drv[port].checksum = c;
-				com_drv[port].indRX = 0;
-				com_drv[port].c_state = HEADER_SIZE;	// the command is to follow
-			} else if (com_drv[port].c_state == HEADER_SIZE) {
-				com_drv[port].cmdMSP = c;
-				com_drv[port].checksum ^= c;
-				com_drv[port].c_state = HEADER_CMD;
-			} else if (com_drv[port].c_state == HEADER_CMD && com_drv[port].offset < com_drv[port].dataSize) {
-				com_drv[port].checksum ^= c;
-				com_drv[port].inBuf[com_drv[port].offset++] = c;
-			} else if (com_drv[port].c_state == HEADER_CMD && com_drv[port].offset >= com_drv[port].dataSize) {
-				if (com_drv[port].checksum == c) {		// compare calculated and transferred checksum
-					evaluateCommand(port);      		// we got a valid packet, evaluate it
-				}
+		if (com_drv[port].c_state == IDLE) {
+			com_drv[port].c_state = (c == '$') ? HEADER_START : IDLE;
+			if (com_drv[port].c_state == IDLE && port == 0)
+				evaluateOtherData(c);				// evaluate all other incoming serial data
+		} else if (com_drv[port].c_state == HEADER_START) {
+			com_drv[port].c_state = (c == 'M') ? HEADER_M : IDLE;
+		} else if (com_drv[port].c_state == HEADER_M) {
+			com_drv[port].c_state = (c == '<') ? HEADER_ARROW : IDLE;
+		} else if (com_drv[port].c_state == HEADER_ARROW) {
+			if (c > INBUF_SIZE) {					// now we are expecting the payload size
 				com_drv[port].c_state = IDLE;
+				continue;
 			}
+			com_drv[port].dataSize = c;
+			com_drv[port].offset = 0;
+			com_drv[port].checksum = c;
+			com_drv[port].indRX = 0;
+			com_drv[port].c_state = HEADER_SIZE;	// the command is to follow
+		} else if (com_drv[port].c_state == HEADER_SIZE) {
+			com_drv[port].cmdMSP = c;
+			com_drv[port].checksum ^= c;
+			com_drv[port].c_state = HEADER_CMD;
+		} else if (com_drv[port].c_state == HEADER_CMD && com_drv[port].offset < com_drv[port].dataSize) {
+			com_drv[port].checksum ^= c;
+			com_drv[port].inBuf[com_drv[port].offset++] = c;
+		} else if (com_drv[port].c_state == HEADER_CMD && com_drv[port].offset >= com_drv[port].dataSize) {
+			if (com_drv[port].checksum == c) {		// compare calculated and transferred checksum
+				evaluateCommand(port);      		// we got a valid packet, evaluate it
+			}
+			com_drv[port].c_state = IDLE;
 		}
-    }
+	}
 }
 
 #include "fifo_buffer.h"
 
 #define	MSP_RX_BUFFER_SIZE	64
-static t_fifo_buffer	msp_Rx_Buffer_Hnd;
-static uint8_t	 		msp_Rx_Buffer[MSP_RX_BUFFER_SIZE];
+static t_fifo_buffer		msp_Rx_Buffer_Hnd;
+static uint8_t	 			msp_Rx_Buffer[MSP_RX_BUFFER_SIZE];
 
 /* UART helper functions */
-static void mspCallback(uint16_t data)
-{
-	fifoBuf_putByte(&msp_Rx_Buffer_Hnd, data);
-}
-
-static uint16_t mspHasData(void)
-{
-	return (fifoBuf_getUsed(&msp_Rx_Buffer_Hnd) == 0) ? false : true;
-}
-
-static uint8_t mspRead(void)
-{
-    return fifoBuf_getByte(&msp_Rx_Buffer_Hnd);
-}
-
-static void mspWrite(uint8_t data)
-{
-	uartWrite(MSP_UART, data);
-}
+static void mspCallback(uint16_t data)	{ fifoBuf_putByte(&msp_Rx_Buffer_Hnd, data); }
+static uint16_t mspHasData(void)		{ return (fifoBuf_getUsed(&msp_Rx_Buffer_Hnd) == 0) ? false : true; }
+static uint8_t mspRead(void)			{ return fifoBuf_getByte(&msp_Rx_Buffer_Hnd); }
+static void mspWrite(uint8_t data)		{ uartWrite(MSP_UART, data); }
 
 portTASK_FUNCTION_PROTO(mspTask, pvParameters)
 {
 	portTickType xLastWakeTime;
 
-	// By default MSP protocol activated on USB VCP
-    com_drv[0].c_state = IDLE;
-    com_drv[0].da = vcp1HasData;
-	com_drv[0].rx = vcp1GetByte;
-	com_drv[0].tx = vcp1SendByte;
-
-	// Also we use modem connected to UART1 if MSP activated
+	// Setup port depending cfg.uart1_mode: see UART1_MODE_t ENUM
 	if (cfg.uart1_mode == UART1_MODE_MSP)
 	{
-		portNumber = 2;
 		fifoBuf_init(&msp_Rx_Buffer_Hnd, &msp_Rx_Buffer, MSP_RX_BUFFER_SIZE);
-
 		uartInit(MSP_UART, cfg.uart1_baudrate, mspCallback);
-	    com_drv[1].c_state = IDLE;
-		com_drv[1].da = mspHasData;
-		com_drv[1].rx = mspRead;
-		com_drv[1].tx = mspWrite;
+
+		com_drv[0].c_state = IDLE;
+		com_drv[0].da = mspHasData;
+		com_drv[0].rx = mspRead;
+		com_drv[0].tx = mspWrite;
+	}
+	else
+	{
+		com_drv[0].c_state = IDLE;
+		com_drv[0].da = vcp1HasData;
+		com_drv[0].rx = vcp1GetByte;
+		com_drv[0].tx = vcp1SendByte;
 	}
 
 	// Initialise the xLastWakeTime variable with the current time.

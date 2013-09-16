@@ -1,7 +1,7 @@
 #include "main.h"
 
 /*
-	UART1 - Bloetooth, XBee, Radio modem, ... (MSP / MAVLink protocol)
+	UART1 - Bloetooth, XBee, Radio modem, ... (MSP / MAVLink protocol / Simulator)
 	UART5 - FrSky telemetry, S.Bus
  	UART3/4 - GPS
 */

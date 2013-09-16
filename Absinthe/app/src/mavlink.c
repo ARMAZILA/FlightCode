@@ -11,8 +11,8 @@ uint8_t system_mode = MAV_MODE_MANUAL_DISARMED; 	///< Booting up
 uint32_t custom_mode = 0; 							///< Custom mode, can be defined by user/adopter
 uint8_t system_state = MAV_STATE_STANDBY; 			///< System ready for flight
 
-uint16_t m_parameter_i[2] = { 0, 0 };
-static int packet_drops[2] = { 0, 0 };
+static uint16_t m_parameter_i = 0;
+static int packet_drops = 0;
 
 extern volatile uint32_t sysTickUptime;
 
@@ -34,30 +34,12 @@ static t_fifo_buffer		ml_Rx_Buffer_Hnd;
 static uint8_t 				ml_Rx_Buffer[ML_RX_BUFFER_SIZE];
 
 /* UART1 helper functions */
-static void mlCallback_uart1(uint16_t data)
-{
-	fifoBuf_putByte(&ml_Rx_Buffer_Hnd, data);
-}
+static void mlCallback_uart1(uint16_t data)	{ fifoBuf_putByte(&ml_Rx_Buffer_Hnd, data); }
+static uint16_t mlHasData_uart1(void)		{ return (fifoBuf_getUsed(&ml_Rx_Buffer_Hnd) == 0) ? false : true; }
+static uint8_t mlReadByte_uart1(void)		{ return fifoBuf_getByte(&ml_Rx_Buffer_Hnd); }
 
-static uint16_t mlHasData_uart1(void)
-{
-	return (fifoBuf_getUsed(&ml_Rx_Buffer_Hnd) == 0) ? false : true;
-}
-
-static uint8_t mlReadByte_uart1(void)
-{
-    return fifoBuf_getByte(&ml_Rx_Buffer_Hnd);
-}
-
-static uint8_t mlReadByte_vcp2(void)
-{
-	return vcpGetByte(1);
-}
-
-static uint16_t mlHasData_vcp2(void)
-{
-	return vcpHasData(1);
-}
+static uint8_t mlReadByte_vcp2(void)		{ return vcpGetByte(1); }
+static uint16_t mlHasData_vcp2(void)		{ return vcpHasData(1); }
 
 static void ml_send_25Hz(mavlink_channel_t chan)
 {
@@ -194,7 +176,7 @@ static void ml_send_1Hz(mavlink_channel_t chan)
 		ibat / 10,					// Battery current, in 10*milliamperes (1 = 10 milliampere)
 		100,						// Remaining battery energy: (0%: 0, 100%: 100)
 		0,							// Communication drops in percent, (0%: 0, 100%: 10'000)
-		packet_drops[chan],			// Communication errors
+		packet_drops,				// Communication errors
 		0,							// Autopilot-specific errors
 		0,							// Autopilot-specific errors
 		0,							// Autopilot-specific errors
@@ -314,6 +296,84 @@ static void paramSetFromFloatValue(const param_value_t *var, float value)
     }
 }
 
+static void ml_param_set(mavlink_channel_t chan, const mavlink_message_t *msg)
+{
+	mavlink_param_set_t set;
+	mavlink_msg_param_set_decode(msg, &set);
+
+	// Check if this message is for this system
+	if ((uint8_t) set.target_system == (uint8_t) mavlink_system.sysid &&
+		(uint8_t) set.target_component == (uint8_t) mavlink_system.compid)
+	{
+		char* key = (char*) set.param_id;
+
+		for (uint16_t i = 0; i < valueTableCount; i++)
+		{
+			bool match = true;
+			for (uint8_t j = 0; j < MAVLINK_MSG_PARAM_SET_FIELD_PARAM_ID_LEN; j++)
+			{
+				// Compare
+				if (((char) (valueTable[i].name[j])) != (char) (key[j]))
+				{
+					match = false;
+				}
+
+				// End matching if null termination is reached
+				if (((char) valueTable[i].name[j]) == '\0')
+				{
+					break;
+				}
+			}
+
+			// Check if matched
+			if (match)
+			{
+				paramSetFromFloatValue(&valueTable[i], set.param_value);
+
+				// Report back new value
+				mavlink_msg_param_value_send(chan,
+					valueTable[i].name,
+					paramGet(&valueTable[i]),
+					set.param_type,
+					valueTableCount, i);
+			}
+		}
+	}
+}
+
+static void ml_command_long(mavlink_channel_t chan, const mavlink_message_t *msg)
+{
+	mavlink_command_long_t cl;
+	mavlink_msg_command_long_decode(msg, &cl);
+	char buf[50];
+
+	switch (cl.command)
+	{
+	case MAV_CMD_PREFLIGHT_STORAGE:
+		if (cl.param1 == 1)
+		{
+			writeFlashConfig(1);
+			mavlink_msg_statustext_send(chan, MAV_SEVERITY_INFO, "mavlink: Write config to flash");
+		}
+		break;
+
+	default:
+		sprintf(buf, "mavlink: COMMAND_LONG (%d) %d %d", cl.command, (int32_t) cl.param1, (int32_t) cl.param2);
+		mavlink_msg_statustext_send(chan, MAV_SEVERITY_INFO, buf);
+		break;
+	}
+}
+
+static void ml_set_mode(mavlink_channel_t chan, const mavlink_message_t *msg)
+{
+	mavlink_set_mode_t sm;
+	mavlink_msg_set_mode_decode(msg, &sm);
+	char buf[50];
+
+	sprintf(buf, "MAVLink: Set mode (%u)", sm.base_mode);
+	mavlink_msg_statustext_send(chan, MAV_SEVERITY_INFO, buf);
+}
+
 /**
 * @brief Receive communication packets and handle them
 *
@@ -322,96 +382,38 @@ static void paramSetFromFloatValue(const param_value_t *var, float value)
 */
 static void ml_message_handler(mavlink_channel_t chan, mavlink_message_t* msg)
 {
+	char buf[50];
+
 	// Handle message
 	switch (msg->msgid)
 	{
 	case MAVLINK_MSG_ID_PARAM_REQUEST_LIST:
-	{
 		// Start sending parameters
-		m_parameter_i[chan] = 0;
+		m_parameter_i = 0;
 		break;
-	}
 
 	case MAVLINK_MSG_ID_HEARTBEAT:
-	{
 		// E.g. read GCS heartbeat and go into
 		// comm lost mode if timer times out
 		break;
-	}
-
 
 	case MAVLINK_MSG_ID_PARAM_SET:
-	{
-		mavlink_param_set_t set;
-		mavlink_msg_param_set_decode(msg, &set);
-
-		// Check if this message is for this system
-		if ((uint8_t) set.target_system == (uint8_t) mavlink_system.sysid &&
-			(uint8_t) set.target_component == (uint8_t) mavlink_system.compid)
-		{
-			char* key = (char*) set.param_id;
-
-			for (uint16_t i = 0; i < valueTableCount; i++)
-			{
-				bool match = true;
-				for (uint8_t j = 0; j < MAVLINK_MSG_PARAM_SET_FIELD_PARAM_ID_LEN; j++)
-				{
-					// Compare
-					if (((char) (valueTable[i].name[j])) != (char) (key[j]))
-					{
-						match = false;
-					}
-
-					// End matching if null termination is reached
-					if (((char) valueTable[i].name[j]) == '\0')
-					{
-						break;
-					}
-				}
-
-				// Check if matched
-				if (match)
-				{
-					paramSetFromFloatValue(&valueTable[i], set.param_value);
-
-					// Report back new value
-					mavlink_msg_param_value_send(chan,
-						valueTable[i].name,
-						paramGet(&valueTable[i]),
-						set.param_type,
-						valueTableCount, i);
-				}
-			}
-		}
+		ml_param_set(chan, msg);
 		break;
-	}
 
+	case MAVLINK_MSG_ID_COMMAND_LONG:
+		ml_command_long(chan, msg);
+		break;
+
+	case MAVLINK_MSG_ID_SET_MODE:
+		ml_set_mode(chan, msg);
+		break;
 
 	default:
-		//Do nothing
-	break;
+		sprintf(buf, "MAVLink: Unknown message type received (%u)", msg->msgid);
+		mavlink_msg_statustext_send(chan, MAV_SEVERITY_INFO, buf);
+		break;
 	}
-#if 0
-	// COMMUNICATION THROUGH SECOND UART
-
-	while (uart1_char_available())
-	{
-		uint8_t c = uart1_get_char();
-		// Try to get a new message
-		if (mavlink_parse_char(MAVLINK_COMM_1, c, &msg, &status))
-		{
-			// Handle message the same way like in for UART0
-			// you can also consider to write a handle function like
-			// handle_mavlink(mavlink_channel_t chan, mavlink_message_t* msg)
-			// Which handles the messages for both or more UARTS
-		}
-
-		// And get the next one
-	}
-
-	// Update global packet drops counter
-	packet_drops += status.packet_rx_drop_count;
-#endif
 }
 
 /**
@@ -424,11 +426,11 @@ static void ml_message_handler(mavlink_channel_t chan, mavlink_message_t* msg)
 static void ml_queued_send(mavlink_channel_t chan)
 {
 	//send parameters one by one
-	if (m_parameter_i[chan] < valueTableCount)
+	if (m_parameter_i < valueTableCount)
 	{
 		uint par_type = MAVLINK_TYPE_FLOAT;
 
-		switch (valueTable[m_parameter_i[chan]].type)
+		switch (valueTable[m_parameter_i].type)
 		{
 		case VAR_FLOAT:
 			par_type = MAVLINK_TYPE_FLOAT;
@@ -447,13 +449,13 @@ static void ml_queued_send(mavlink_channel_t chan)
 		}
 
 		mavlink_msg_param_value_send(chan,
-			valueTable[m_parameter_i[chan]].name,
-			paramGet(&valueTable[m_parameter_i[chan]]),
+			valueTable[m_parameter_i].name,
+			paramGet(&valueTable[m_parameter_i]),
 			par_type,
 			valueTableCount,
-            m_parameter_i[chan]);
+            m_parameter_i);
 
-		m_parameter_i[chan]++;
+		m_parameter_i++;
 	}
 }
 
@@ -514,7 +516,7 @@ portTASK_FUNCTION_PROTO(mavlinkTask, pvParameters)
     		}
 
     		// Update global packet drops counter
-        	packet_drops[chan] += status.packet_rx_drop_count;
+        	packet_drops += status.packet_rx_drop_count;
     	}
 
     	if (++CycleCount25Hz == 4)

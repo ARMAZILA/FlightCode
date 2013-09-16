@@ -594,8 +594,8 @@ void loop(void)
 		}
 		else
 		{
-			float sin_yaw_y = sinf(heading * 0.0174532925f);
-			float cos_yaw_x = cosf(heading * 0.0174532925f);
+			float sin_yaw_y = sinf(heading_rad);
+			float cos_yaw_x = cosf(heading_rad);
 			if (cfg.nav_slew_rate)
 			{
 				nav_rated[LON] += constrain(wrap_18000(nav[LON] - nav_rated[LON]), -cfg.nav_slew_rate, cfg.nav_slew_rate); // TODO check this on uint8

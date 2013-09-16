@@ -28,15 +28,6 @@ typedef struct {
     float		pitch;		// Pitch in degrees
 } sim_pack_in_t;
 
-/* Simulator input / armazila output data protocol structure */
-/* All controls goes -1...1. Zerro = neutral */
-typedef struct {
-    float		aileron;
-    float		elevator;
-    float		rudder;
-    float		throttle;
-} sim_pack_out_t;
-
 // State mashine codes
 typedef enum {
     IDLE,
@@ -53,7 +44,7 @@ typedef enum {
 static t_fifo_buffer		sim_Rx_Buffer_Hnd;
 static uint8_t 				sim_Rx_Buffer[ML_RX_BUFFER_SIZE];
 
-#define SIM_VCP_PORT		0 	// Use VCP1
+#define SIM_VCP_PORT		(cfg.uart1_mode ==  UART1_MODE_MSP ? 0 : 1)
 
 serialSendByte_t 	simSendByte = NULL;
 serialReadByte_t	simReadByte = NULL;
@@ -110,71 +101,18 @@ static float swap_float(float f) {
     return * (float *) (char[]) {c[3], c[2], c[1], c[0] };
 }
 
-#if 0
-static void simSend32(uint32_t data)
-{
-	uint8_t port = 1;
-
-	vcpSendByte(port, (data >> 24) & 0xFF);
-	vcpSendByte(port, (data >> 16) & 0xFF);
-	vcpSendByte(port, (data >>  8) & 0xFF);
-	vcpSendByte(port, (data      ) & 0xFF);
-}
-
-static void simSendBin(void)
-{
-	float data;
-
-	data = 1.0;
-	simSend32((uint32_t) data);
-
-	data = 0.9;
-	simSend32((uint32_t) data);
-
-	data = 0.5;
-	simSend32((uint32_t) data);
-
-	data = 0.2;
-	simSend32((uint32_t) data);	// Throttle
-}
-#endif
-
 /* UART1 helper functions */
-static void simSendByte_uart1(uint8_t data)
-{
-	uartWrite(SERIAL_UART1, data);	// UART1
-}
+static void simSendByte_uart1(uint8_t data) 	{ uartWrite(SERIAL_UART1, data); }
+static void simCallback_uart1(uint16_t data) 	{ fifoBuf_putByte(&sim_Rx_Buffer_Hnd, data); }
+static uint16_t simHasData_uart1(void)			{ return (fifoBuf_getUsed(&sim_Rx_Buffer_Hnd) == 0) ? false : true; }
+static uint8_t simReadByte_uart1(void)			{ return fifoBuf_getByte(&sim_Rx_Buffer_Hnd); }
 
-static void simCallback_uart1(uint16_t data)
-{
-	fifoBuf_putByte(&sim_Rx_Buffer_Hnd, data);
-}
+/* VCP helper functions */
+static void simSendByte_vcp(uint8_t data)		{ vcpSendByte(SIM_VCP_PORT, data); }
+static uint8_t simReadByte_vcp(void)			{ return vcpGetByte(SIM_VCP_PORT); }
+static uint16_t simHasData_vcp(void)			{ return vcpHasData(SIM_VCP_PORT); }
 
-static uint16_t simHasData_uart1(void)
-{
-	return (fifoBuf_getUsed(&sim_Rx_Buffer_Hnd) == 0) ? false : true;
-}
-
-static uint8_t simReadByte_uart1(void)
-{
-    return fifoBuf_getByte(&sim_Rx_Buffer_Hnd);
-}
-
-static void simSendByte_vcp(uint8_t data)
-{
-	vcpSendByte(SIM_VCP_PORT, data);
-}
-
-static uint8_t simReadByte_vcp(void)
-{
-	return vcpGetByte(SIM_VCP_PORT);
-}
-
-static uint16_t simHasData_vcp(void)
-{
-	return vcpHasData(SIM_VCP_PORT);
-}
-
+/* Print string to symulator port */
 static void simPrint(char *str)
 {
     while (*str)

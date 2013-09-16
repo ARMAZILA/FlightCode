@@ -152,7 +152,7 @@ uint8_t valueTableCount = (sizeof(valueTable) / sizeof(valueTable[0]));
 config_t cfg;
 const char rcChannelLetters[] = "AERT1234";
 
-const uint8_t FLASH_CONFIG_VERSION = 38;
+const uint8_t FLASH_CONFIG_VERSION = 39;
 static uint32_t enabledSensors = 0;
 static uint32_t flagRegistor = 0;
 
@@ -458,7 +458,7 @@ static void resetFlashConfig(void)
 
     cfg.wdg_counter 			= 0;
 
-    cfg.uart1_mode				= 0;	// MSP
+    cfg.uart1_mode				= 2;	// HIL
     cfg.uart1_baudrate			= 115200;
 
     cfg.hil_mode				= 0;

@@ -69,8 +69,7 @@ portTASK_FUNCTION_PROTO(initTask, pvParameters)
 	checkFirstTime(false);
 	readFlashConfig();
 
-	mixerInit(); // this will set useServo var depending on mixer type
-	// when using airplane/wing mixer, servo/motor outputs are remapped
+	mixerInit();
 
     // Init pwm perephirial
 	pwmInit(cfg.rcprotocol,
@@ -100,12 +99,11 @@ portTASK_FUNCTION_PROTO(initTask, pvParameters)
 	/* Initialize tasks */
 	//			Task_func				        Task_name   Stack	   	 Param	 Prio			 Handler
 	xTaskCreate(signalTask,  	 (signed char *) "Signal",  256, (void *) NULL,  3, (xTaskHandle *) NULL);
-//	xTaskCreate(mspTask,     	 (signed char *) "Serial",  512, (void *) NULL,  2, (xTaskHandle *) NULL);
+	xTaskCreate(mspTask,     	 (signed char *) "Serial",  512, (void *) NULL,  2, (xTaskHandle *) NULL);
+	xTaskCreate(mavlinkTask, 	 (signed char *) "MAVLink", 512, (void *) NULL,  2, (xTaskHandle *) NULL);
 
 	if (cfg.hil_mode)
-		xTaskCreate(simTask, 	 (signed char *) "HITL",    512, (void *) NULL,  2, (xTaskHandle *) NULL);
-
-	xTaskCreate(mavlinkTask, 	 (signed char *) "MAVLink", 512, (void *) NULL,  2, (xTaskHandle *) NULL);
+		xTaskCreate(simTask, 	 (signed char *) "HIL",     512, (void *) NULL,  2, (xTaskHandle *) NULL);
 
 	/* Initialize sensors. Do it before starting watch dog timer */
 	sensorsInit();
