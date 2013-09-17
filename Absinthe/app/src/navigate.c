@@ -165,10 +165,11 @@ static int16_t nav_takeoff_bearing;
 
 void GPS_reset_home_position(void)
 {
-    if (flag(FLAG_GPS_FIX) && GPS_numSat >= 5) {
-        GPS_home[LAT] = GPS_coord[LAT];
-        GPS_home[LON] = GPS_coord[LON];
-        GPS_calc_longitude_scaling(GPS_coord[LAT]); // need an initial value for distance and bearing calc
+    if (flag(FLAG_GPS_FIX) && gps.numSat >= 5)
+    {
+        gps.home[LAT] = gps.coord[LAT];
+        gps.home[LON] = gps.coord[LON];
+        GPS_calc_longitude_scaling(gps.coord[LAT]); // need an initial value for distance and bearing calc
         nav_takeoff_bearing = heading;              // save takeoff heading
         // Set ground altitude
         flagSet(FLAG_GPS_FIX_HOME);
@@ -181,7 +182,7 @@ void GPS_reset_nav(void)
     int i;
 
     for (i = 0; i < 2; i++) {
-        GPS_angle[i] = 0;
+        gps.angle[i] = 0;
         nav_rated[i] = 0;
         nav[i] = 0;
         reset_PID(&posholdPID[i]);
@@ -235,10 +236,10 @@ void GPS_set_next_wp(int32_t *lat, int32_t *lon)
     GPS_WP[LON] = *lon;
 
     GPS_calc_longitude_scaling(*lat);
-    GPS_distance_cm_bearing(&GPS_coord[LAT], &GPS_coord[LON], &GPS_WP[LAT], &GPS_WP[LON], &wp_distance, &target_bearing);
+    GPS_distance_cm_bearing(&gps.coord[LAT], &gps.coord[LON], &GPS_WP[LAT], &GPS_WP[LON], &wp_distance, &target_bearing);
 
     nav_bearing = target_bearing;
-    GPS_calc_location_error(&GPS_WP[LAT], &GPS_WP[LON], &GPS_coord[LAT], &GPS_coord[LON]);
+    GPS_calc_location_error(&GPS_WP[LAT], &GPS_WP[LON], &gps.coord[LAT], &gps.coord[LON]);
     original_target_bearing = target_bearing;
     waypoint_speed_gov = cfg.nav_speed_min;
 }
@@ -292,8 +293,8 @@ static void GPS_calc_velocity(void)
 
     if (init) {
         float tmp = 1.0f / dTnav;
-        actual_speed[GPS_X] = (float) (GPS_coord[LON] - last[LON]) * GPS_scaleLonDown * tmp;
-        actual_speed[GPS_Y] = (float) (GPS_coord[LAT] - last[LAT]) * tmp;
+        actual_speed[GPS_X] = (float) (gps.coord[LON] - last[LON]) * GPS_scaleLonDown * tmp;
+        actual_speed[GPS_Y] = (float) (gps.coord[LAT] - last[LAT]) * tmp;
 
         actual_speed[GPS_X] = (actual_speed[GPS_X] + speed_old[GPS_X]) / 2;
         actual_speed[GPS_Y] = (actual_speed[GPS_Y] + speed_old[GPS_Y]) / 2;
@@ -303,8 +304,8 @@ static void GPS_calc_velocity(void)
     }
     init = 1;
 
-    last[LON] = GPS_coord[LON];
-    last[LAT] = GPS_coord[LAT];
+    last[LON] = gps.coord[LON];
+    last[LAT] = gps.coord[LAT];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -468,7 +469,7 @@ void gps_navigate(void)
 	GPS_filter_index = (GPS_filter_index + 1) % GPS_FILTER_VECTOR_LENGTH;
 	for (axis = 0; axis < 2; axis++)
 	{
-		GPS_read[axis] = GPS_coord[axis]; // latest unfiltered data is in GPS_latitude and GPS_longitude
+		GPS_read[axis] = gps.coord[axis]; // latest unfiltered data is in GPS_latitude and GPS_longitude
 		GPS_degree[axis] = GPS_read[axis] / 10000000; // get the degree to assure the sum fits to the int32_t
 
 		// How close we are to a degree line ? its the first three digits from the fractions of degree
@@ -483,7 +484,7 @@ void gps_navigate(void)
 		if (nav_mode == NAV_MODE_POSHOLD)
 		{ // we use gps averaging only in poshold mode...
 			if (fraction3[axis] > 1 && fraction3[axis] < 999)
-				GPS_coord[axis] = GPS_filtered[axis];
+				gps.coord[axis] = GPS_filtered[axis];
 		}
 	}
 #endif
@@ -495,14 +496,14 @@ void gps_navigate(void)
 	dTnav = min(dTnav, 1.0f);
 
 	// calculate distance and bearings for gui and other stuff continously - From home to copter
-	GPS_distance_cm_bearing(&GPS_coord[LAT], &GPS_coord[LON], &GPS_home[LAT], &GPS_home[LON], &dist, &dir);
-	GPS_distanceToHome = dist / 100;
-	GPS_directionToHome = dir / 100;
+	GPS_distance_cm_bearing(&gps.coord[LAT], &gps.coord[LON], &gps.home[LAT], &gps.home[LON], &dist, &dir);
+	gps.distanceToHome = dist / 100;
+	gps.directionToHome = dir / 100;
 
 	if (!flag(FLAG_GPS_FIX_HOME))
 	{ // If we don't have home set, do not display anything
-		GPS_distanceToHome = 0;
-		GPS_directionToHome = 0;
+		gps.distanceToHome = 0;
+		gps.directionToHome = 0;
 	}
 
 	// calculate the current velocity based on gps coordinates continously to get a valid speed at the moment when we start navigating
@@ -512,10 +513,8 @@ void gps_navigate(void)
 
 	// ok we are navigating
 	// do gps nav calculations here, these are common for nav and poshold
-	GPS_distance_cm_bearing(&GPS_coord[LAT], &GPS_coord[LON], &GPS_WP[LAT],
-			&GPS_WP[LON], &wp_distance, &target_bearing);
-	GPS_calc_location_error(&GPS_WP[LAT], &GPS_WP[LON], &GPS_coord[LAT],
-			&GPS_coord[LON]);
+	GPS_distance_cm_bearing(&gps.coord[LAT], &gps.coord[LON], &GPS_WP[LAT], &GPS_WP[LON], &wp_distance, &target_bearing);
+	GPS_calc_location_error(&GPS_WP[LAT], &GPS_WP[LON], &gps.coord[LAT], &gps.coord[LON]);
 
 	switch (nav_mode)
 	{

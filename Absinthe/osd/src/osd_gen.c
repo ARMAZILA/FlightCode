@@ -2202,10 +2202,10 @@ void calcHomeArrow(int16_t m_yaw)
 	float lat1, lat2, lon1, lon2, x, y, brng, u2g;
 
 	// Convert to radians
-	lat1 = DEG2RAD(GPS_home[LAT]) / 10000000.0f; // Home lat
-	lon1 = DEG2RAD(GPS_home[LON]) / 10000000.0f; // Home lon
-	lat2 = DEG2RAD(GPS_coord[LAT]) / 10000000.0f; // UAV lat
-	lon2 = DEG2RAD(GPS_coord[LON]) / 10000000.0f; // UAV lon
+	lat1 = DEG2RAD(gps.home[LAT]) / 10000000.0f; // Home lat
+	lon1 = DEG2RAD(gps.home[LON]) / 10000000.0f; // Home lon
+	lat2 = DEG2RAD(gps.coord[LAT]) / 10000000.0f; // UAV lat
+	lon2 = DEG2RAD(gps.coord[LON]) / 10000000.0f; // UAV lon
 
 	// Bearing
 	/**
@@ -2282,19 +2282,18 @@ void osdScreen0(void)
 		osdWriteString("HOME NOT SET", GRAPHICS_RIGHT/2, GRAPHICS_BOTTOM / 2, 0, 0, TEXT_VA_TOP, TEXT_HA_CENTER, 0, 3);
 	}
 
-	sprintf(temp, "LAT:%d", GPS_coord[LAT]);
+	sprintf(temp, "LAT:%d", gps.coord[LAT]);
 	osdWriteString(temp, 20, GRAPHICS_BOTTOM - 30, 0, 0, TEXT_VA_BOTTOM, TEXT_HA_LEFT, 0, 3);
 
 
-	sprintf(temp, "LAT:%d", GPS_coord[LAT]);
+	sprintf(temp, "LAT:%d", gps.coord[LAT]);
 	osdWriteString(temp, 20, GRAPHICS_BOTTOM - 10, 0, 0, TEXT_VA_BOTTOM, TEXT_HA_LEFT, 0, 3);
 
-	sprintf(temp, "SAT:%d", (int) GPS_numSat);
+	sprintf(temp, "SAT:%d", (int) gps.numSat);
 	osdWriteString(temp, GRAPHICS_RIGHT - 5, GRAPHICS_BOTTOM - 20, 0, 0, TEXT_VA_TOP, TEXT_HA_RIGHT, 0, 3);
 
 	/* Print ADC voltage FLIGHT*/
-	uint16_t batt = batteryAdcToVoltage(adcGetChannel(ADC_VOLTAGE_SENSOR));
-	sprintf(temp, "BAT:%d.%dV", batt / 10, batt - ((batt / 10) * 10));
+	sprintf(temp, "BAT:%d.%dV", power.fbat / 10, power.fbat % 10);
 	osdWriteString(temp, GRAPHICS_RIGHT - 5, GRAPHICS_BOTTOM - 40, 0, 0, TEXT_VA_TOP, TEXT_HA_RIGHT, 0, 3);
 
 	if (heading > 180)
@@ -2348,16 +2347,16 @@ void osdScreen1(void)
 
 	char temp[50] = { 0 };
 
-	sprintf(temp, "Lat:%d", GPS_coord[LAT]);
+	sprintf(temp, "Lat:%d", gps.coord[LAT]);
 	osdWriteString(temp, 5, 5, 0, 0, TEXT_VA_TOP, TEXT_HA_LEFT, 0, 2);
 
-	sprintf(temp, "Lon:%d", GPS_coord[LON]);
+	sprintf(temp, "Lon:%d", gps.coord[LON]);
 	osdWriteString(temp, 5, 15, 0, 0, TEXT_VA_TOP, TEXT_HA_LEFT, 0, 2);
 
 	sprintf(temp, "Fix:%d", (int) flag(FLAG_GPS_FIX));
 	osdWriteString(temp, 5, 25, 0, 0, TEXT_VA_TOP, TEXT_HA_LEFT, 0, 2);
 
-	sprintf(temp, "Sat:%d", (int) GPS_numSat);
+	sprintf(temp, "Sat:%d", (int) gps.numSat);
 	osdWriteString(temp, 5, 35, 0, 0, TEXT_VA_TOP, TEXT_HA_LEFT, 0, 2);
 
 	/* Print Number of detected video Lines */
@@ -2696,13 +2695,13 @@ void osdScreen4(void)
 
 	// Telemetry -------------------------------------------------------------------------------------
 	/* Print ADC voltage FLIGHT*/
-	sprintf(temp, "%d.%d V", vbat / 10, vbat % 10);
+	sprintf(temp, "%d.%d V", power.fbat / 10, power.fbat % 10);
 	osdWriteString(temp,  5, 0, 0, 0, TEXT_VA_TOP, TEXT_HA_LEFT, 0, FONT_OUTLINED8X14);
-	sprintf(temp, "%d mah", ebat);
+	sprintf(temp, "%d mah", power.ebat);
 	osdWriteString(temp,  5, 16, 0, 0, TEXT_VA_TOP, TEXT_HA_LEFT, 0, FONT_OUTLINED8X14);
 	sprintf(temp, "%02d:%02d:%02d", datetime.hour, datetime.minute, datetime.second);
 	osdWriteString(temp,  GRAPHICS_RIGHT - 5, 0, 0, 0, TEXT_VA_TOP, TEXT_HA_RIGHT, 0, FONT_OUTLINED8X14);
-	sprintf(temp, "GPS: %d", GPS_numSat);
+	sprintf(temp, "GPS: %d", gps.numSat);
 	osdWriteString(temp,  GRAPHICS_RIGHT - 5, 16, 0, 0, TEXT_VA_TOP, TEXT_HA_RIGHT, 0, FONT_OUTLINED8X14);
 }
 
@@ -2732,7 +2731,7 @@ void updateGraphics()
 		osdDrawArtificialHorizon(-angle[ROLL] / 10, angle[PITCH] / 10, 55, 72, 115);
 
 		// GPS_speed in cm/s
-		osdHudDrawVscale((uint16_t)((float)GPS_speed * 0.36f), 20, HUD_HALIGN_RIGHT, 50, GRAPHICS_BOTTOM / 2, 180,
+		osdHudDrawVscale((uint16_t)((float)gps.speed * 0.36f), 20, HUD_HALIGN_RIGHT, 50, GRAPHICS_BOTTOM / 2, 180,
 				5, 10, 4, 7, 10, 100, HUD_VSCALE_FLAG_NO_NEGATIVE);
 
 		// EstAlt in cm

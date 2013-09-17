@@ -58,7 +58,6 @@ static void cliBeep(char *cmdline);
 
 // from sensors.c
 extern uint8_t	batteryCellCount;
-extern uint32_t	sensor_cycle_count;
 
 #if 0
 extern uint32_t	acc_sample_count;
@@ -595,7 +594,7 @@ static void cliSensor(char *cmdline)
 	}
 
 	printf("Show sensor real data:\r\n");
-	printf("Sensors cycles    = %u\r\n", sensor_cycle_count);
+	printf("Sensors cycles    = %u\r\n", counters.sensorCycleCount);
 	printf("Gyro count        = %u\r\n", gyro_sensor.sample_count);
 	printf("Gyro overruns     = %u\r\n", gyro_sensor.overrun_count);
 	printf("Acc count         = %u\r\n", acc_sensor.sample_count);
@@ -668,7 +667,7 @@ static void cliSensor(char *cmdline)
 	printf("Baro alt (cm)     = %d\r\n", BaroAlt);
 	printf("Baro alt ground   = %d\r\n", BaroAltGround);
 	printf("Sonar alt (cm)    = %d\r\n", sonarAlt);
-	printf("GPS altitude      = %d\r\n", GPS_altitude);
+	printf("GPS altitude      = %d\r\n", gps.altitude);
 	printf("Altitude          = %d\r\n", EstAlt);
 
 	if (len == 0)
@@ -732,15 +731,15 @@ static void cliStatus(char *cmdline)
 
     printf("System Uptime:     %d seconds\r\n", millis() / 1000);
 
-	ftoa(vbat / 10.0f, buf);
+	ftoa(power.fbat / 10.0f, buf);
     printf("Voltage:          %s V (%dS battery)\r\n", buf, batteryCellCount);
-	printf("Current:           %d mA\r\n", ibat);
-	printf("Consumed:          %u mAh\r\n", ebat);
-	Temp = adcGetChannel(ADC_VIDEO_BATTERY) * 3.3 / 4095.0 * 6.0;
-	ftoa(Temp, buf);
+	printf("Current:           %d mA\r\n", power.ibat);
+	printf("Consumed:          %u mAh\r\n", power.ebat);
+	ftoa(power.vbat / 10.0f, buf);
 	printf("Video Batt:       %s V\r\n", buf);
     printf("CPU clock:         %d MHz\r\n", (SystemCoreClock / 1000000));
-    printf("Cycle Time:        %d us\r\n", cycleTime);
+    printf("Cycle time:        %d us\r\n", counters.cycleTime);
+    printf("Sensor read time:  %d us\r\n", counters.sensorReadTime);
     printf("I2C Errors:        %d\r\n", i2cGetErrorCounter());
     printf("Watchdog events:   %d\r\n", cfg.wdg_counter);
 
@@ -828,9 +827,6 @@ static void cliTest(char *cmdline)
 		printf("\r\nOSD\r\n");
 		printf("maxScanLine       = %u\r\n", osdData.maxScanLine);
 		printf("osdCicleTimer     = %u\r\n", osdCicleTime);
-
-		printf("\r\nBattery\r\n");
-		printf("ibat (mA)         = %u\r\n", ibat);
 
 		printf("\r\nRSSI              = %u\r\n", rssi);
 	}

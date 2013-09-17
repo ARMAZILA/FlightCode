@@ -5,6 +5,12 @@
 	Armazila board 110-10-04-02 (10dM3UOP88) hardware definitions
 */
 
+/* Flash sector address waipoint storage */
+#define FLASH_WAYPOINT_ADDR        (0x08000000 + (uint32_t)0x0007F800)       // use sector 255
+
+/* Flash sector address config storage */
+#define FLASH_CONFIG_ADDR          (0x08000000 + (uint32_t)0x0007F000)       // use sector 254 for storage
+
 /*
 	ADC signals
 -----------------------------------------------------------------------

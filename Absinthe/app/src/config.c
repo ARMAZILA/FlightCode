@@ -2,9 +2,6 @@
 #include "main.h"
 #include <string.h>
 
-#define FLASH_CONFIG_ADDR          (0x08000000 + (uint32_t)0x0007F000)       // use sector 254 for storage
-#define FLASH_CONFIG_ADDR__        (0x08000000 + (uint32_t)0x0007F800)       // use sector 255 for storage
-
 #define COMPILE_TIME_ASSERT(pred) switch(0) { case 0:case pred:; }
 #define ASSERT_SIZE_EXCEEDED(type, size) COMPILE_TIME_ASSERT(sizeof(type) <= size)
 
@@ -109,8 +106,8 @@ const param_value_t valueTable[] = {
     { "GPS_NAV_I",		VAR_UINT8, 	&cfg.I8[PIDNAVR], 0, 200 },
     { "GPS_NAV_D",		VAR_UINT8, 	&cfg.D8[PIDNAVR], 0, 200 },
     { "GPS_WP_RADIUS",	VAR_UINT16, &cfg.gps_wp_radius, 0, 2000 },
-    { "GPS_BYTES_RX",	VAR_UINT32, &gps_bytes_rx, 0, 0 },
-    { "GPS_FRAMES_RX",	VAR_UINT32, &gps_frames_rx, 0, 0 },
+    { "GPS_BYTES_RX",	VAR_UINT32, &gps.bytes_rx, 0, 0 },
+    { "GPS_FRAMES_RX",	VAR_UINT32, &gps.frames_rx, 0, 0 },
 
     { "NAV_CTRL_HEAD",	VAR_UINT8, 	&cfg.nav_controls_heading, 0, 1 },
     { "NAV_SPEED_MIN",	VAR_UINT16, &cfg.nav_speed_min, 10, 2000 },

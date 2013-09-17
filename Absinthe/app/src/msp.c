@@ -193,12 +193,12 @@ static void evaluateCommand(uint8_t port)
         	flagSet(FLAG_GPS_FIX);
         else
         	flagClear(FLAG_GPS_FIX);
-        GPS_numSat = read8(port);
-        GPS_coord[LAT] = read32(port);
-        GPS_coord[LON] = read32(port);
-        GPS_altitude = read16(port);
-        GPS_speed = read16(port);
-        GPS_update |= 2;        // New data signalisation to GPS functions
+        gps.numSat = read8(port);
+        gps.coord[LAT] = read32(port);
+        gps.coord[LON] = read32(port);
+        gps.altitude = read16(port);
+        gps.speed = read16(port);
+        gps.update |= 2;        // New data signalisation to GPS functions
         headSerialReply(port, 0);
         break;
     case MSP_SET_PID:
@@ -236,7 +236,7 @@ static void evaluateCommand(uint8_t port)
         break;
     case MSP_STATUS:
         headSerialReply(port, 11);
-        serialize16(port, cycleTime);
+        serialize16(port, counters.cycleTime);
         serialize16(port, i2cGetErrorCounter());
         serialize16(port,
         		sensors(SENSOR_ACC) |
@@ -289,17 +289,17 @@ static void evaluateCommand(uint8_t port)
     case MSP_RAW_GPS:
         headSerialReply(port, 14);
         serialize8(port, flag(FLAG_GPS_FIX));
-        serialize8(port, GPS_numSat);
-        serialize32(port, GPS_coord[LAT]);
-        serialize32(port, GPS_coord[LON]);
-        serialize16(port, GPS_altitude);
-        serialize16(port, GPS_speed);
+        serialize8(port, gps.numSat);
+        serialize32(port, gps.coord[LAT]);
+        serialize32(port, gps.coord[LON]);
+        serialize16(port, gps.altitude);
+        serialize16(port, gps.speed);
         break;
     case MSP_COMP_GPS:
         headSerialReply(port, 5);
-        serialize16(port, GPS_distanceToHome);
-        serialize16(port, GPS_directionToHome);
-        serialize8(port, GPS_update & 1);
+        serialize16(port, gps.distanceToHome);
+        serialize16(port, gps.directionToHome);
+        serialize8(port, gps.update & 1);
         break;
     case MSP_ATTITUDE:
         headSerialReply(port, 8);
@@ -314,7 +314,7 @@ static void evaluateCommand(uint8_t port)
         break;
     case MSP_BAT:
         headSerialReply(port, 3);
-        serialize8(port, vbat);
+        serialize8(port, power.fbat);
         serialize16(port, 0); // power meter trash
         break;
     case MSP_RC_TUNING:
@@ -362,14 +362,14 @@ static void evaluateCommand(uint8_t port)
         headSerialReply(port, 12);
         if (wp_no == 0) {
             serialize8(port, 0);                   // wp0
-            serialize32(port, GPS_home[LAT]);
-            serialize32(port, GPS_home[LON]);
+            serialize32(port, gps.home[LAT]);
+            serialize32(port, gps.home[LON]);
             serialize16(port, 0);                  // altitude will come here
             serialize8(port, 0);                   // nav flag will come here
         } else if (wp_no == 16) {
             serialize8(port, 16);                  // wp16
-            serialize32(port, GPS_hold[LAT]);
-            serialize32(port, GPS_hold[LON]);
+            serialize32(port, gps.hold[LAT]);
+            serialize32(port, gps.hold[LON]);
             serialize16(port, 0);                  // altitude will come here
             serialize8(port, 0);                   // nav flag will come here
         }

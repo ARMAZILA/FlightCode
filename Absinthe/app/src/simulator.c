@@ -239,15 +239,15 @@ portTASK_FUNCTION_PROTO(simTask, pvParameters)
     				// Simulate 5Hz GPS update
     				gpsCycleCount = 0;
 
-					GPS_coord[LAT] 		= swap_float(packet->lat) * 1e7;
-					GPS_coord[LON] 		= swap_float(packet->lon) * 1e7;
-	    			GPS_altitude		= swap_float(packet->alt) / 10.0f;
-	    			GPS_speed			= swap_float(packet->groundspeed);
-	    			GPS_ground_course 	= swap_float(packet->head) * 10;
-	    		    GPS_update 			= (GPS_update == 1 ? 0 : 1);
-	    		    GPS_numSat 			= 12;
-	    		    GPS_hdop 			= 1;
-	    			gps_frames_rx ++;
+					gps.coord[LAT] 		= swap_float(packet->lat) * 1e7;
+					gps.coord[LON] 		= swap_float(packet->lon) * 1e7;
+	    			gps.altitude		= swap_float(packet->alt) / 10.0f;
+	    			gps.speed			= swap_float(packet->groundspeed);
+	    			gps.ground_course 	= swap_float(packet->head) * 10;
+	    		    gps.update 			= (gps.update == 1 ? 0 : 1);
+	    		    gps.numSat 			= 12;
+	    		    gps.hdop 			= 1;
+	    			gps.frames_rx ++;
 
 	    		    sensorsSet(SENSOR_GPS);
 	    		    flagSet(FLAG_GPS_FIX);

@@ -4,6 +4,7 @@
 // **********************
 // GPS
 // **********************
+#if 0
 int32_t GPS_coord[2];
 int32_t GPS_home[2];
 int32_t GPS_hold[2];
@@ -16,11 +17,9 @@ uint8_t GPS_update = 0; 		// it's a binary toogle to distinct a GPS position upd
 int16_t GPS_angle[2] = { 0, 0 }; // it's the angles that must be applied for GPS correction
 uint16_t GPS_ground_course = 0; // degrees * 10
 uint16_t GPS_hdop;
+#endif
 
-
-/* GPS diagnostic counters */
-uint32_t gps_bytes_rx = 0;
-uint32_t gps_frames_rx = 0;
+gps_sensor_t gps;
 
 xSemaphoreHandle gpsSemaphore = NULL;
 xTimerHandle gpsLostTimer;
@@ -221,16 +220,16 @@ static bool GPS_NMEA_newFrame(char c)
 		{
 			if (param == 2)
 			{
-				GPS_coord[LAT] = GPS_coord_to_degrees(string);
+				gps.coord[LAT] = GPS_coord_to_degrees(string);
 			}
 			else if (param == 3 && string[0] == 'S')
-				GPS_coord[LAT] = -GPS_coord[LAT];
+				gps.coord[LAT] = -gps.coord[LAT];
 			else if (param == 4)
 			{
-				GPS_coord[LON] = GPS_coord_to_degrees(string);
+				gps.coord[LON] = GPS_coord_to_degrees(string);
 			}
 			else if (param == 5 && string[0] == 'W')
-				GPS_coord[LON] = -GPS_coord[LON];
+				gps.coord[LON] = -gps.coord[LON];
 			else if (param == 6)
 			{
 				if (string[0] > '0')
@@ -240,22 +239,22 @@ static bool GPS_NMEA_newFrame(char c)
 			}
 			else if (param == 7)
 			{
-				GPS_numSat = grab_fields(string, 0);
+				gps.numSat = grab_fields(string, 0);
 			}
 			else if (param == 9)
 			{
-				GPS_altitude = grab_fields(string, 0); // altitude in meters added by Mis
+				gps.altitude = grab_fields(string, 0); // altitude in meters added by Mis
 			}
 		}
 		else if (frame == FRAME_RMC)
 		{
 			if (param == 7)
 			{
-				GPS_speed = (grab_fields(string, 1) * 5144L) / 1000L; // speed in cm/s added by Mis
+				gps.speed = (grab_fields(string, 1) * 5144L) / 1000L; // speed in cm/s added by Mis
 			}
 			else if (param == 8)
 			{
-				GPS_ground_course = grab_fields(string, 1); // ground course deg * 10
+				gps.ground_course = grab_fields(string, 1); // ground course deg * 10
 			}
 		}
 		param++;
@@ -424,9 +423,9 @@ static bool UBLOX_parse_gps(void)
     switch (_msg_id) {
     case MSG_POSLLH:
         //i2c_dataset.time                = _buffer.posllh.time;
-        GPS_coord[LON] = _buffer.posllh.longitude;
-        GPS_coord[LAT] = _buffer.posllh.latitude;
-        GPS_altitude = _buffer.posllh.altitude_msl / 10 / 100;  //alt in m
+        gps.coord[LON] = _buffer.posllh.longitude;
+        gps.coord[LAT] = _buffer.posllh.latitude;
+        gps.altitude = _buffer.posllh.altitude_msl / 10 / 100;  //alt in m
         if (next_fix)
         	flagSet(FLAG_GPS_FIX);
         else
@@ -442,14 +441,14 @@ static bool UBLOX_parse_gps(void)
         next_fix = (_buffer.solution.fix_status & NAV_STATUS_FIX_VALID) && (_buffer.solution.fix_type == FIX_3D);
         if (!next_fix)
             flagClear(FLAG_GPS_FIX);
-        GPS_numSat = _buffer.solution.satellites;
-        GPS_hdop   = _buffer.solution.position_DOP;
+        gps.numSat = _buffer.solution.satellites;
+        gps.hdop   = _buffer.solution.position_DOP;
         // debug[3] = GPS_hdop;
         break;
     case MSG_VELNED:
         // speed_3d = _buffer.velned.speed_3d;  // cm/s
-        GPS_speed = _buffer.velned.speed_2d;    // cm/s
-        GPS_ground_course = (uint16_t) (_buffer.velned.heading_2d / 10000);     // Heading 2D deg * 100000 rescaled to deg * 10
+        gps.speed = _buffer.velned.speed_2d;    // cm/s
+        gps.ground_course = (uint16_t) (_buffer.velned.heading_2d / 10000);     // Heading 2D deg * 100000 rescaled to deg * 10
         _new_speed = true;
         break;
     default:
@@ -544,18 +543,18 @@ static bool GPS_newFrame(char c)
 
 void GPS_NewData(uint16_t c)
 {
-	gps_bytes_rx ++;
+	gps.bytes_rx ++;
 
 	if (!GPS_newFrame(c)) return;
 
-	gps_frames_rx ++;
+	gps.frames_rx ++;
 
     sensorsSet(SENSOR_GPS);
     xTimerReset(gpsLostTimer, 10);
 
-    GPS_update = (GPS_update == 1 ? 0 : 1);
+    gps.update = (gps.update == 1 ? 0 : 1);
 
-	if (flag(FLAG_GPS_FIX) && GPS_numSat > 4)
+	if (flag(FLAG_GPS_FIX) && gps.numSat > 4)
 		xSemaphoreGive(gpsSemaphore);
 }
 
@@ -570,6 +569,9 @@ void gpsInit(uint32_t baudrate)
 {
     int i;
     int offset = 0;
+
+    gps.bytes_rx = 0;
+    gps.frames_rx = 0;
 
 	// Create semaphore for OSD frame drawing syncronization
 	vSemaphoreCreateBinary(gpsSemaphore);

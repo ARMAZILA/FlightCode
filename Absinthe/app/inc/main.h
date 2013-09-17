@@ -403,6 +403,13 @@ typedef struct config_t {
     uint8_t chk;                            // XOR checksum
 } config_t;
 
+typedef struct counter_t
+{
+	uint32_t	sensorCycleCount;				// Sensor task loop counter. Should be increased with 100 Hz freq.
+	uint16_t 	cycleTime; 						// this is the number in micro second to achieve a full loop, it can differ a little and is taken into account in the PID loop
+	uint16_t	sensorReadTime;					// Time elapsed to read sensors data
+} counters_t;
+
 typedef struct gyro_sensor_t {
 	uint32_t	sample_count;					// Gyro sensor loop counter. Should be increased with 760 Hz freq (Gyro ODR).
 	uint32_t	overrun_count;					// Gyro sensor data not abalible counter. Should be 0.
@@ -422,6 +429,30 @@ typedef struct acc_sensor_t {
 	float		average[3];						// Average value (degrees / second)
 	float		variance[3];					// Variance (degrees / second)
 } acc_sensor_t;
+
+typedef struct gps_sensor_t {
+	int32_t 	coord[2];
+	int32_t 	home[2];
+	int32_t 	hold[2];
+	uint8_t 	numSat;
+	uint16_t 	distanceToHome; 				// distance to home point in meters
+	int16_t 	directionToHome; 				// direction to home or hol point in degrees 0..360
+	uint16_t 	altitude;						// altitude in 0.1m
+	uint16_t 	speed; 							// speed in 0.1m/s
+	uint8_t 	update; 						// it's a binary toogle to distinct a GPS position update
+	int16_t 	angle[2]; 						// it's the angles that must be applied for GPS correction
+	uint16_t 	ground_course; 					// degrees * 10
+	uint16_t 	hdop;
+	uint32_t 	bytes_rx;
+	uint32_t 	frames_rx;
+} gps_sensor_t;
+
+typedef struct power_sensor_t {
+	uint8_t 	fbat;  							// flight battery voltage in 0.1V steps
+	int16_t 	ibat; 							// flight battery current in 1mA steps. + discharge / - charge
+	uint16_t 	ebat; 							// flight battery consumed energy in 1mAh steps
+	uint8_t		vbat;  							// video battery voltage in 0.1V steps
+} power_sensor_t;
 
 /* Available Flags */
 typedef enum {
@@ -460,7 +491,6 @@ extern int16_t	failsafeCnt;
 
 extern uint8_t	rssi;						// 0..255 -> 0%..100%
 extern int16_t 	debug[4];
-extern uint16_t cycleTime;
 extern int32_t 	BaroAlt;
 extern int32_t 	BaroAltGround;
 extern int16_t 	sonarAlt;
@@ -474,25 +504,14 @@ extern int16_t 	magHold;
 extern int16_t 	motor[MAX_MOTORS];
 extern int16_t 	servo[MAX_SERVOS];
 extern int16_t 	rcData[8];
-extern uint8_t 	vbat;
-extern int16_t 	ibat;
-extern uint16_t ebat;
+extern power_sensor_t	power;
+
 extern int16_t 	baro_temp;      // gyro sensor temperature
 extern int16_t 	lookupPitchRollRC[6];   // lookup table for expo & RC rate PITCH+ROLL
 extern int16_t 	lookupThrottleRC[11];   // lookup table for expo & mid THROTTLE
 
-// GPS stuff
-extern int32_t  GPS_coord[2];
-extern int32_t  GPS_home[2];
-extern int32_t  GPS_hold[2];
-extern uint8_t  GPS_numSat;
-extern uint16_t GPS_distanceToHome;                          // distance to home or hold point in meters
-extern int16_t  GPS_directionToHome;                         // direction to home or hol point in degrees
-extern uint16_t GPS_altitude,GPS_speed;                      // altitude in 0.1m and speed in 0.1m/s
-extern uint8_t  GPS_update;                                  // it's a binary toogle to distinct a GPS position update
-extern int16_t  GPS_angle[2];                                // it's the angles that must be applied for GPS correction
-extern uint16_t GPS_ground_course;                           // degrees*10
-extern uint16_t GPS_hdop;
+extern gps_sensor_t gps;
+
 extern int16_t  nav[2];
 extern int8_t   nav_mode;                                    // Navigation mode
 extern int16_t  nav_rated[2];                                // Adding a rate controller to the navigation to make it smoother
@@ -532,23 +551,19 @@ void getEstimatedAltitude(void);
 void imuAHRSupdate();
 
 // Sensors
+extern counters_t 		counters;
 extern acc_sensor_t		acc_sensor;
 extern gyro_sensor_t	gyro_sensor;
 extern int16_t 			mag_sensor_data[3];
 extern uint16_t 		acc_1G;
 void sensorsInit(void);
-uint16_t batteryAdcToVoltage(uint16_t src);
 portTASK_FUNCTION_PROTO(sensorTask, pvParameters);
 portTASK_FUNCTION_PROTO(powerSensorTask, pvParameters);
 portTASK_FUNCTION_PROTO(sonarTask, pvParameters);
 
-// Output
+// Mixer
 void mixerInit(void);
 void mixerLoadMix(int index);
-/*
-void writeServos(void);
-void writeMotors(void);
-*/
 void mixerWwriteAllMotors(int16_t mc);
 void mixerTable(void);
 void mixerWrite();
@@ -570,11 +585,6 @@ uint32_t sensorsMask(void);
 bool flag(AvailableFlags_t mask);
 void flagSet(AvailableFlags_t mask);
 void flagClear(AvailableFlags_t mask);
-bool feature(uint32_t mask);
-void featureSet(uint32_t mask);
-void featureClear(uint32_t mask);
-void featureClearAll(void);
-uint32_t featureMask(void);
 
 // spektrum
 void spektrumInit(void);
@@ -596,8 +606,6 @@ void cliProcess(void);
 char *ftoa(float x, char *floatString);
 
 // gps
-extern uint32_t gps_bytes_rx;
-extern uint32_t gps_frames_rx;
 void gpsInit(uint32_t baudrate);
 void GPS_reset_home_position(void);
 void GPS_reset_nav(void);

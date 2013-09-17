@@ -1,25 +1,23 @@
 
 #include "main.h"
 
-uint32_t	sensor_cycle_count	= 0;	// Sensor task loop counter. Should be increased with 100 Hz freq.
-
-gyro_sensor_t	gyro_sensor;			// Structure for real time gyro sensor data
-
 #define GYRO_LPF_BIAS		(0.01)
 #define GYRO_LPF_VARIANCE	(0.01)
-
-acc_sensor_t	acc_sensor;				// Structure for real time accel sensor data
-
-uint16_t acc_1G = 256;         			// this is the 1G measured acceleration.
 
 #define ACC_LPF_BIAS		(0.01)
 #define ACC_LPF_VARIANCE	(0.01)
 
-int16_t mag_sensor_data[3];				// Magnetometer sensor data
+counters_t		counters;				// Counters
+gyro_sensor_t	gyro_sensor;			// Structure for real time gyro sensor data
+acc_sensor_t	acc_sensor;				// Structure for real time accel sensor data
+int16_t 		mag_sensor_data[3];		// Magnetometer sensor data
+uint16_t 		acc_1G = 256;  			// this is the 1G measured acceleration.
 
 int16_t 	baro_temp;					// baro sensor temperature in 0.1 degrees
 int32_t 	BaroAlt;					// in cm. Altitude from barometr compensated by baroAltGround
 int16_t 	sonarAlt 			= -2;   // in cm, < 0: bad data
+
+power_sensor_t	power;
 
 //extern uint16_t InflightcalibratingA;
 //extern int16_t AccInflightCalibrationArmed;
@@ -56,39 +54,23 @@ void sensorsInit(void)
     }
 }
 
-uint16_t batteryAdcToVoltage(uint16_t src)
-{
-    // calculate battery voltage based on ADC reading
-    // result is Vbatt in 0.1V steps. 3.3V = ADC Vref, 4095 = 12bit adc, 60 = 6:1 voltage divider
-    return (((src) * 3.3f) / 4095) * cfg.batvscale;
-}
-
-/*
- * The battery current can be negative because the motor could regenerate
- * power or we could have solar cells.
- */
-int16_t batteryAdcToCurrent(uint16_t src)
-{
-    // calculate battery current based on ADC reading
-    // result is Ibatt in 1 mA steps. 3.3V = ADC Vref, 4095 = 12bit adc, 2:1 voltage divider
-    return (((src) * 3.3f) / 4095) * cfg.batiscale - cfg.batioffset;
-}
-
 void batteryInit(void)
 {
     uint32_t i;
     uint32_t voltage = 0;
 
     // average up some voltage readings
-    for (i = 0; i < 32; i++) {
+    for (i = 0; i < 32; i++)
+    {
         voltage += adcGetChannel(ADC_VOLTAGE_SENSOR);
         vTaskDelay(10 / portTICK_RATE_MS);	// Delay on 10 ms
     }
 
-    voltage = batteryAdcToVoltage((uint16_t)(voltage / 32));
+    voltage = (((voltage / 32) * 3.3f) / 4095) * cfg.batvscale;
 
     // autodetect cell count, going from 2S..6S
-    for (i = 2; i < 6; i++) {
+    for (i = 2; i < 6; i++)
+    {
         if (voltage < i * cfg.batmaxcellvoltage)
             break;
     }
@@ -421,17 +403,21 @@ static void baroSensorUpdate(void)
  * to manadge i2c bus resourse access.
  *
  * Sensor data rate        : update rate
- * Baro  - 25 Hz  - 40 ms  | 50 ms
+ * Baro  -  25 Hz -  40 ms | 50 ms
  * Accel - 400 Hz - 2.5 ms | 10 ms
- * Mag   - 30 Hz  - 4.5 ms | 40 ms
+ * Mag   -  30 Hz - 4.5 ms | 40 ms
  * Gyro  - 760 Hz - 1.3 ms | 10 ms
  */
 
 portTASK_FUNCTION_PROTO(sensorTask, pvParameters)
 {
 	portTickType xLastWakeTime;
-	uint8_t baroSensorCycleCount = 0;
-	uint8_t magSensorCycleCount = 0;
+	uint8_t		baroSensorCycleCount = 0;
+	uint8_t		magSensorCycleCount = 0;
+	uint16_t	cycleTime;
+	uint16_t	sensorReadTime;
+
+	counters.sensorCycleCount	= 0;
 
 	/* Sensors alrady initialized in main.c */
 
@@ -447,8 +433,7 @@ portTASK_FUNCTION_PROTO(sensorTask, pvParameters)
     while (1)
     {
 		// Measure loop rate just afer reading the sensors
-		uint32_t sTime, eTime;
-		sTime = micros();
+		uint32_t sTime = micros();
 
 		if (cfg.hil_mode == 0) {
 			// Read gyro sensor data each cycle 10 ms
@@ -473,9 +458,10 @@ portTASK_FUNCTION_PROTO(sensorTask, pvParameters)
 			}
 		}
 
-		// XXX Time to read sensor
-		eTime = micros();
-		debug[3] = (int32_t) (eTime - sTime);
+		// Time to read sensors
+		sensorReadTime = (int32_t) (micros() - sTime);
+		counters.sensorReadTime = counters.sensorReadTime * 0.99 + sensorReadTime * 0.01;
+		debug[3] = counters.sensorReadTime;
 
 		// TODO: Switch off IMU by cfg.hil_mode
 		switch (cfg.imu_algorithm)
@@ -500,10 +486,9 @@ portTASK_FUNCTION_PROTO(sensorTask, pvParameters)
 
 		mixerWrite();
 
-		eTime = micros();
-		cycleTime = (int32_t) (eTime - sTime);
-
-		sensor_cycle_count++;
+		cycleTime = (int32_t) (micros() - sTime);
+		counters.cycleTime = counters.cycleTime * 0.99 + cycleTime * 0.01;
+		counters.sensorCycleCount++;
 
 #if 0
 		// Check if all the sensors are calibrated
@@ -523,6 +508,7 @@ portTASK_FUNCTION_PROTO(sensorTask, pvParameters)
 portTASK_FUNCTION_PROTO(powerSensorTask, pvParameters)
 {
 	portTickType xLastWakeTime;
+	static uint16_t fbatTmp = 0;
 	static uint16_t vbatTmp = 0;
 	static uint16_t ibatTmp = 0;
 	static float ebatTmp = 0;
@@ -535,10 +521,16 @@ portTASK_FUNCTION_PROTO(powerSensorTask, pvParameters)
 
     while (1)
     {
-		vbatTmp = vbatTmp * 0.9 + adcGetChannel(ADC_VOLTAGE_SENSOR) * 0.1;
-		vbat = batteryAdcToVoltage(vbatTmp);
+		vbatTmp = vbatTmp * 0.9 + adcGetChannel(ADC_VIDEO_BATTERY) * 0.1;
+		power.vbat = ((vbatTmp * 3.3f) / 4095) * 60;
 
-		if ((cfg.batalarm) && (vbat < batteryWarningVoltage))
+		fbatTmp = fbatTmp * 0.9 + adcGetChannel(ADC_VOLTAGE_SENSOR) * 0.1;
+
+	    // calculate battery voltage based on ADC reading
+	    // result is Vbatt in 0.1V steps. 3.3V = ADC Vref, 4095 = 12bit adc, 60 = 6:1 voltage divider
+		power.fbat = ((fbatTmp * 3.3f) / 4095) * cfg.batvscale;
+
+		if ((cfg.batalarm) && (power.fbat < batteryWarningVoltage))
 		{
 			if (buzzerCycleCount == 0)
 			{
@@ -553,13 +545,16 @@ portTASK_FUNCTION_PROTO(powerSensorTask, pvParameters)
 
 		// Consumed energy calculate
 		ibatTmp = ibatTmp * 0.9 + adcGetChannel(ADC_CURRENT_SENSOR) * 0.1;
-		ibat = batteryAdcToCurrent(ibatTmp);	// Battery current in mA
 
-		ebatTmp += ibat / 36000.0f;
-		ebat = ebatTmp;							// Battery consumed energy in mAh
+	    // calculate battery current based on ADC reading
+	    // result is Ibatt in 1 mA steps. 3.3V = ADC Vref, 4095 = 12bit adc, 2:1 voltage divider
+		power.ibat = ((ibatTmp * 3.3f) / 4095) * cfg.batiscale - cfg.batioffset;	// Battery current in mA
+
+		ebatTmp += power.ibat / 36000.0f;
+		power.ebat = ebatTmp;						// Battery consumed energy in mAh
 
 		// Wait for the next cycle.
-		vTaskDelayUntil(&xLastWakeTime, 100);	// Task cycle time 100 ms
+		vTaskDelayUntil(&xLastWakeTime, 100);		// Task cycle time 100 ms
     }
 }
 
@@ -599,7 +594,8 @@ portTASK_FUNCTION_PROTO(sonarTask, pvParameters)
 		sonarAlt = alt;
 
 //		debug[0] = alt;
-//		debug[1] = (int16_t) (alt * cosf(DEG2RAD(angle[ROLL] / 10.f)) * cosf(DEG2RAD(angle[PITCH] / 10.f))); // Bad idea
+//		debug[1] = (int16_t) (alt * cosf(DEG2RAD(angle[ROLL] / 10.f)) * cosf(DEG2RAD(angle[PITCH] / 10.f)));
+// 		Bad idea
 
 		// Wait for the next cycle.
 		vTaskDelayUntil(&xLastWakeTime, 60);	// Task cycle time 60 ms

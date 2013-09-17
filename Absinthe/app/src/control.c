@@ -1,16 +1,11 @@
 
 #include "main.h"
 
-static xTimerHandle ArmingTimer;
+static xTimerHandle TimerArming;
 
 int16_t 	debug[4];
 uint32_t 	currentTime = 0;
-uint16_t 	cycleTime = 0; // this is the number in micro second to achieve a full loop, it can differ a little and is taken into account in the PID loop
 int16_t 	headFreeModeHold;
-
-uint8_t 	vbat;  // battery voltage in 0.1V steps
-int16_t 	ibat; // battery current in 1mA steps. + discharge / - charge
-uint16_t 	ebat; // battery consumed energy in 1mAh steps
 
 int16_t 	failsafeCnt = 0;
 int16_t 	failsafeEvents = 0;
@@ -194,7 +189,7 @@ void loop(void)
 			if (rcOptions[BOXARM] && flag(FLAG_OK_TO_ARM))
 			{
 				// TODO: feature(FEATURE_FAILSAFE) && failsafeCnt == 0
-				xTimerStart(ArmingTimer, 10);
+				xTimerStart(TimerArming, 10);
 			}
 			else if (flag(FLAG_ARMED))
 			{
@@ -214,7 +209,7 @@ void loop(void)
 		{
 			if (rcDelayCommand == 20)
 			{
-				xTimerStart(ArmingTimer, 10);
+				xTimerStart(TimerArming, 10);
 			}
 		}
 		else
@@ -390,14 +385,14 @@ void loop(void)
 
 	if (sensors(SENSOR_GPS))
 	{
-		if (flag(FLAG_GPS_FIX) && GPS_numSat >= 5)
+		if (flag(FLAG_GPS_FIX) && gps.numSat >= 5)
 		{
 			if (rcOptions[BOXGPSHOME])
 			{
 				if (!flag(FLAG_GPSHOME_MODE))
 				{
 					flagSet(FLAG_GPSHOME_MODE);
-					GPS_set_next_wp(&GPS_home[LAT], &GPS_home[LON]);
+					GPS_set_next_wp(&gps.home[LAT], &gps.home[LON]);
 					nav_mode = NAV_MODE_WP;
 				}
 			}
@@ -410,9 +405,9 @@ void loop(void)
 				if (!flag(FLAG_GPSHOLD_MODE))
 				{
 					flagSet(FLAG_GPSHOLD_MODE);
-					GPS_hold[LAT] = GPS_coord[LAT];
-					GPS_hold[LON] = GPS_coord[LON];
-					GPS_set_next_wp(&GPS_hold[LAT], &GPS_hold[LON]);
+					gps.hold[LAT] = gps.coord[LAT];
+					gps.hold[LON] = gps.coord[LON];
+					GPS_set_next_wp(&gps.hold[LAT], &gps.hold[LON]);
 					nav_mode = NAV_MODE_POSHOLD;
 				}
 			}
@@ -553,7 +548,7 @@ void loop(void)
 	if (sensors(SENSOR_GPS))
 	{
 		static uint32_t GPSLEDTime;
-		if ((int32_t) (currentTime - GPSLEDTime) >= 0 && (GPS_numSat >= 5))
+		if ((int32_t) (currentTime - GPSLEDTime) >= 0 && (gps.numSat >= 5))
 		{
 			GPSLEDTime = currentTime + 150000;
 			signalLED(LED_NAV, LEDMODE_TOGGLE);
@@ -615,13 +610,13 @@ void loop(void)
 			{
 				nav_rated[LON] += constrain(wrap_18000(nav[LON] - nav_rated[LON]), -cfg.nav_slew_rate, cfg.nav_slew_rate); // TODO check this on uint8
 				nav_rated[LAT] += constrain(wrap_18000(nav[LAT] - nav_rated[LAT]), -cfg.nav_slew_rate, cfg.nav_slew_rate);
-				GPS_angle[ROLL] = (nav_rated[LON] * cos_yaw_x - nav_rated[LAT] * sin_yaw_y) / 10;
-				GPS_angle[PITCH] = (nav_rated[LON] * sin_yaw_y + nav_rated[LAT] * cos_yaw_x) / 10;
+				gps.angle[ROLL] = (nav_rated[LON] * cos_yaw_x - nav_rated[LAT] * sin_yaw_y) / 10;
+				gps.angle[PITCH] = (nav_rated[LON] * sin_yaw_y + nav_rated[LAT] * cos_yaw_x) / 10;
 			}
 			else
 			{
-				GPS_angle[ROLL] = (nav[LON] * cos_yaw_x - nav[LAT] * sin_yaw_y) / 10;
-				GPS_angle[PITCH] = (nav[LON] * sin_yaw_y + nav[LAT] * cos_yaw_x) / 10;
+				gps.angle[ROLL] = (nav[LON] * cos_yaw_x - nav[LAT] * sin_yaw_y) / 10;
+				gps.angle[PITCH] = (nav[LON] * sin_yaw_y + nav[LAT] * cos_yaw_x) / 10;
 			}
 		}
 	}
@@ -663,7 +658,7 @@ void stabilize(float dT)
 		if ((flag(FLAG_ANGLE_MODE) || flag(FLAG_HORIZON_MODE)) && axis < 2)	// MODE relying on ACC
 		{
 		  // 50 degrees max inclination
-			errorAngle = constrain(2 * rcCommand[axis] + GPS_angle[axis], -500, +500) - angle[axis] + cfg.angleTrim[axis];
+			errorAngle = constrain(2 * rcCommand[axis] + gps.angle[axis], -500, +500) - angle[axis] + cfg.angleTrim[axis];
 			PTermACC = errorAngle * cfg.P8[PIDLEVEL] / 100.0f;
 			PTermACC = constrain(PTermACC, -cfg.D8[PIDLEVEL] * 5, +cfg.D8[PIDLEVEL] * 5);
 			errorAngleI[axis] = constrain(errorAngleI[axis] + errorAngle, -10000, +10000); // WindUp
@@ -718,7 +713,7 @@ portTASK_FUNCTION_PROTO(rcLoopTask, pvParameters)
 {
 	portTickType xLastWakeTime;
 
-	ArmingTimer = xTimerCreate((signed char *) "TimArming", 1000, pdFALSE, (void *) 0, armingCallback);
+	TimerArming = xTimerCreate((signed char *) "TimArming", 1500, pdFALSE, (void *) 0, armingCallback);
 
 	// Initialise the xLastWakeTime variable with the current time.
 	xLastWakeTime = xTaskGetTickCount();

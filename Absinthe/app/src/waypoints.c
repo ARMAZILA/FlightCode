@@ -3,11 +3,21 @@
  *
  *  Created on: 19.08.2013
  *
+ *	Обработчик протокола MAVLink в части команд путевых точек:
+ *	- прием/передача списка
+ *	- очистка списка
+ *	- установка текущей путевой точки
+ *	- чтение/сохранение во флеш памяти
+ *
+ *	The MAVLink protocol handler in waypoints instructions:
+ * - Sending / receiving list
+ * - Cleaning list
+ * - Set the current waypoint
+ * - Reading / saving from / to flash memory
  */
 
 #include "mavlink.h"
 
-#define FLASH_WAYPOINT_ADDR        (0x08000000 + (uint32_t)0x0007F800)       // use sector 255 for storage
 #define	WPF_MAGIC					0xA55A
 
 enum MAVLINK_WPM_STATES
@@ -34,7 +44,7 @@ enum MAVLINK_WPM_CODES
 enum MAVLINK_WPM_STATES current_state;
 
 wp_flash_store_t wpf;
-int16_t current_wp_id; ///< Waypoint in current transmission
+int16_t current_wp_id; 				///< Waypoint in current transmission
 uint16_t current_count;
 uint8_t current_partner_sysid;
 uint8_t current_partner_compid;
@@ -112,7 +122,6 @@ static void wp_mission_request_list(mavlink_channel_t chan, const mavlink_messag
 {
 	mavlink_mission_request_list_t wprl;
 	mavlink_msg_mission_request_list_decode(msg, &wprl);
-	uint64_t now = micros();
 
 	if ((wprl.target_system != mavlink_system.sysid /* || wprl.target_component != mavlink_wpm_comp_id*/))
 		return;
@@ -123,7 +132,7 @@ static void wp_mission_request_list(mavlink_channel_t chan, const mavlink_messag
 	if (wpf.size > 0)
 		current_state = MAVLINK_WPM_STATE_SENDLIST;
 
-	timestamp_lastaction = now;
+	timestamp_lastaction = micros();
 	current_wp_id = 0;
 	current_partner_sysid = msg->sysid;
 	current_partner_compid = msg->compid;
@@ -136,7 +145,6 @@ static void wp_mission_request(mavlink_channel_t chan, const mavlink_message_t *
 {
 	mavlink_mission_request_t wpr;
 	mavlink_msg_mission_request_decode(msg, &wpr);
-	uint64_t now = micros();
 
 	if (msg->sysid != current_partner_sysid || msg->compid != current_partner_compid)
 		return;
@@ -149,10 +157,10 @@ static void wp_mission_request(mavlink_channel_t chan, const mavlink_message_t *
 	 */
 	if (!((current_state == MAVLINK_WPM_STATE_SENDLIST && wpr.seq == 0) ||
 			(current_state == MAVLINK_WPM_STATE_SENDLIST_SENDWPS &&
-					(wpr.seq == current_wp_id || wpr.seq == current_wp_id + 1) && wpr.seq < wpf.size)))
+			(wpr.seq == current_wp_id || wpr.seq == current_wp_id + 1) && wpr.seq < wpf.size)))
 		return;
 
-	timestamp_lastaction = now;
+	timestamp_lastaction = micros();
 	current_state = MAVLINK_WPM_STATE_SENDLIST_SENDWPS;
 	current_wp_id = wpr.seq;
 
@@ -167,7 +175,6 @@ static void wp_mission_ack(mavlink_channel_t chan, const mavlink_message_t *msg)
 {
 	mavlink_mission_ack_t wpa;
 	mavlink_msg_mission_ack_decode(msg, &wpa);
-	uint64_t now = micros();
 
 	if ((msg->sysid != current_partner_sysid || msg->compid != current_partner_compid))
 		return;
@@ -181,7 +188,8 @@ static void wp_mission_ack(mavlink_channel_t chan, const mavlink_message_t *msg)
 	if (current_wp_id == wpf.size - 1)
 	{
 		//printf("Received ACK after having sent last waypoint, going to state MAVLINK_WPM_STATE_IDLE\n");
-		timestamp_lastaction = now;
+		timestamp_lastaction = micros();
+
 		current_state = MAVLINK_WPM_STATE_IDLE;
 		current_wp_id = 0;
 	}
@@ -192,7 +200,6 @@ static void wp_mission_count(mavlink_channel_t chan, const mavlink_message_t *ms
 {
 	mavlink_mission_count_t wpc;
 	mavlink_msg_mission_count_decode(msg, &wpc);
-	uint64_t now = micros();
 
 //	sprintf(buf, "MISSION_COUNT cnt:%u sysid:%u compid:%u", wpc.count, wpc.target_system, wpc.target_component);
 //	mavlink_msg_statustext_send(chan, MAV_SEVERITY_DEBUG, buf);
@@ -205,7 +212,8 @@ static void wp_mission_count(mavlink_channel_t chan, const mavlink_message_t *ms
 		if (wpc.count > 0)
 		{
 			// printf("clearing receive buffer and readying for receiving waypoints\n");
-			timestamp_lastaction = now;
+			timestamp_lastaction = micros();
+
 			current_state = MAVLINK_WPM_STATE_GETLIST;
 			current_wp_id = 0;
 			current_partner_sysid = msg->sysid;
@@ -226,7 +234,6 @@ static void wp_mission_item(mavlink_channel_t chan, const mavlink_message_t *msg
 	mavlink_mission_item_t wp;
 	mavlink_msg_mission_item_decode(msg, &wp);
 	char buf[50];
-	uint64_t now = micros();
 
 //	sprintf(buf, "MISSION_ITEM seq:%u sysid:%u compid:%u", wp.seq, wp.target_system, wp.target_component);
 //	mavlink_msg_statustext_send(chan, MAV_SEVERITY_INFO, buf);
@@ -234,7 +241,8 @@ static void wp_mission_item(mavlink_channel_t chan, const mavlink_message_t *msg
 	if (wp.target_system != mavlink_system.sysid /* || wp.target_component != mavlink_system.compid */)
 		return;
 
-	timestamp_lastaction = now;
+	timestamp_lastaction = micros();
+
 
 	/* ensure that we are in the correct state */
 	if (current_state != MAVLINK_WPM_STATE_GETLIST && current_state != MAVLINK_WPM_STATE_GETLIST_GETWPS)
@@ -302,7 +310,6 @@ static void wp_mission_clear_all(mavlink_channel_t chan, const mavlink_message_t
 {
 	mavlink_mission_clear_all_t wpca;
 	mavlink_msg_mission_clear_all_decode(msg, &wpca);
-	uint64_t now = micros();
 
 	if (wpca.target_system != mavlink_system.sysid /* || wpca.target_component != mavlink_wpm_comp_id */)
 		return;
@@ -311,7 +318,7 @@ static void wp_mission_clear_all(mavlink_channel_t chan, const mavlink_message_t
 		return;
 
 	// Delete all waypoints
-	timestamp_lastaction = now;
+	timestamp_lastaction = micros();
 	wpf.size = 0;
 	mavlink_msg_mission_ack_send(chan, msg->sysid, msg->compid,	MAV_MISSION_ACCEPTED);
 
@@ -345,8 +352,6 @@ static void wp_mission_set_current(mavlink_channel_t chan, const mavlink_message
 
 void wp_message_handler(mavlink_channel_t chan, const mavlink_message_t *msg)
 {
-	char buf[50];
-
 	switch (msg->msgid)
 	{
 	case MAVLINK_MSG_ID_MISSION_REQUEST_LIST:
@@ -378,9 +383,12 @@ void wp_message_handler(mavlink_channel_t chan, const mavlink_message_t *msg)
 		break;
 
 	default:
+	{
+//		char buf[50];
 //		sprintf(buf, "Waypoint: Unknown message type received (%u)", msg->msgid);
 //		mavlink_msg_statustext_send(chan, MAV_SEVERITY_INFO, buf);
-		break;
+	}
+	break;
 
 	} // switch (msg->msgid)
 }

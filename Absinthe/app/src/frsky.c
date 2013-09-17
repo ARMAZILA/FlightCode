@@ -117,26 +117,26 @@ static void sendTime(void)
 static void sendGPS(void)
 {
     sendDataHead(ID_LATITUDE_BP);
-    serialize16(abs(GPS_coord[LAT]) / 100000);
+    serialize16(abs(gps.coord[LAT]) / 100000);
     sendDataHead(ID_LATITUDE_AP);
-    serialize16((abs(GPS_coord[LAT]) / 10) % 10000);
+    serialize16((abs(gps.coord[LAT]) / 10) % 10000);
 
     sendDataHead(ID_N_S);
-    serialize16(GPS_coord[LAT] < 0 ? 'S' : 'N');
+    serialize16(gps.coord[LAT] < 0 ? 'S' : 'N');
 
     sendDataHead(ID_LONGITUDE_BP);
-    serialize16(abs(GPS_coord[LON]) / 100000);
+    serialize16(abs(gps.coord[LON]) / 100000);
     sendDataHead(ID_LONGITUDE_AP);
-    serialize16((abs(GPS_coord[LON]) / 10) % 10000);
+    serialize16((abs(gps.coord[LON]) / 10) % 10000);
     sendDataHead(ID_E_W);
-    serialize16(GPS_coord[LON] < 0 ? 'W' : 'E');
+    serialize16(gps.coord[LON] < 0 ? 'W' : 'E');
 }
 
 static void sendVoltage(void)
 {
     uint16_t voltage;
 
-    voltage = (vbat * 110) / 21;
+    voltage = (power.fbat * 110) / 21;
 
     sendDataHead(ID_VOLTAGE_AMP_BP);
     serialize16(voltage / 100);

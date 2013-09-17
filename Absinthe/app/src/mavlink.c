@@ -110,8 +110,8 @@ static void ml_send_10Hz(mavlink_channel_t chan)
     	vfr_heading = vfr_heading + 360;
 
 	mavlink_msg_vfr_hud_send(chan,
-			GPS_speed / 10,						// Current airspeed in m/s
-			GPS_speed / 10,						// Current ground speed in m/s
+			gps.speed / 10,						// Current airspeed in m/s
+			gps.speed / 10,						// Current ground speed in m/s
 			vfr_heading,						// Current heading in degrees, in compass units (0..360, 0=north)
 			(rcCommand[THROTTLE] - 1000) / 10,	// Current throttle setting in integer percent, 0 to 100
 			EstAlt / 100,						// Current altitude (MSL), in meters
@@ -171,9 +171,9 @@ static void ml_send_1Hz(mavlink_channel_t chan)
    		1 << 4 |					// differential pressure
    		sensors(SENSOR_GPS) << 5 |	// GPS
    		1 << 15,					// motor outputs / control
-   		cycleTime / 10,				// Maximum usage in percent of the mainloop time, (0%: 0, 100%: 1000)
-		vbat * 100,					// Battery voltage, in millivolts (1 = 1 millivolt)
-		ibat / 10,					// Battery current, in 10*milliamperes (1 = 10 milliampere)
+   		counters.cycleTime / 10,	// Maximum usage in percent of the mainloop time, (0%: 0, 100%: 1000)
+		power.fbat * 100,			// Battery voltage, in millivolts (1 = 1 millivolt)
+		power.ibat / 10,			// Battery current, in 10*milliamperes (1 = 10 milliampere)
 		100,						// Remaining battery energy: (0%: 0, 100%: 100)
 		0,							// Communication drops in percent, (0%: 0, 100%: 10'000)
 		packet_drops,				// Communication errors
@@ -187,14 +187,14 @@ static void ml_send_1Hz(mavlink_channel_t chan)
 	mavlink_msg_gps_raw_int_send(chan,
 		(uint64_t) micros(),
 		3,						// fix_type
-		GPS_coord[LAT], // 55.667248 * 1e7,		// Latitude in 1E7 degrees
-		GPS_coord[LON], // 37.601129 * 1e7,		// Longitude in 1E7 degrees
+		gps.coord[LAT], // 55.667248 * 1e7,		// Latitude in 1E7 degrees
+		gps.coord[LON], // 37.601129 * 1e7,		// Longitude in 1E7 degrees
 		EstAlt * 10,			// Altitude in 1E3 meters (millimeters) above MSL
-		GPS_hdop,				// HDOP in cm (m*100). If unknown, set to: 65535
+		gps.hdop,				// HDOP in cm (m*100). If unknown, set to: 65535
 		65535,					// VDOP in cm (m*100). If unknown, set to: 65535
-		GPS_speed,				// GPS ground speed (m/s * 100). If unknown, set to: 65535
-		GPS_ground_course * 10,	// Course over ground in degrees * 100, 0.0..359.99 degrees. If unknown, set to: 65535
-		GPS_numSat				// satellites_visible
+		gps.speed,				// GPS ground speed (m/s * 100). If unknown, set to: 65535
+		gps.ground_course * 10,	// Course over ground in degrees * 100, 0.0..359.99 degrees. If unknown, set to: 65535
+		gps.numSat				// satellites_visible
 	);
 }
 
