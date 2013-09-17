@@ -1,6 +1,8 @@
 
 #include "main.h"
 
+static xTimerHandle ArmingTimer;
+
 int16_t 	debug[4];
 uint32_t 	currentTime = 0;
 uint16_t 	cycleTime = 0; // this is the number in micro second to achieve a full loop, it can differ a little and is taken into account in the PID loop
@@ -80,6 +82,29 @@ void computeRC(void)
 	}
 }
 
+static void armingCallback(xTimerHandle pxTimer)
+{
+	flagSet(FLAG_ARMED);
+	headFreeModeHold = heading;
+	signalLED(LED_STS, LEDMODE_ON);
+	buzzerPlay("1EFGH EFGH 4X");
+}
+
+static void disarm(bool rearm)
+{
+	// Turn off "Ok To arm to prevent the motors from spinning after repowering the RX with low throttle and aux to arm
+	// This will prevent the copter to automatically rearm if failsafe shuts it down and prevents
+	// to restart accidentely by just reconnect to the tx - you will have to switch off first to rearm
+
+	flagClear(FLAG_ARMED);
+
+	if (rearm)
+		flagClear(FLAG_OK_TO_ARM);
+
+	signalLED(LED_STS, LEDMODE_OFF);
+	buzzerPlay("2M");
+}
+
 void loop(void)
 {
 	static uint8_t rcDelayCommand; // this indicates the number of time (multiple of RC measurement at 50Hz) the sticks must be maintained to run or switch off motors
@@ -109,18 +134,14 @@ void loop(void)
 				rcData[i] = cfg.midrc; // after specified guard time after RC signal is lost (in 0.1sec)
 			rcData[THROTTLE] = cfg.failsafe_throttle;
 			if (failsafeCnt > 5 * (cfg.failsafe_delay + cfg.failsafe_off_delay))
-			{ // Turn OFF motors after specified Time (in 0.1sec)
-				flagClear(FLAG_ARMED);		// This will prevent the copter to automatically rearm if failsafe shuts it down and prevents
-				flagClear(FLAG_OK_TO_ARM);	// to restart accidentely by just reconnect to the tx - you will have to switch off first to rearm
-				signalLED(LED_STS, LEDMODE_OFF);
+			{
+				disarm(true);
 			}
 			failsafeEvents++;
 		}
 		if (failsafeCnt > (5 * cfg.failsafe_delay) && !flag(FLAG_ARMED))
-		{ // Turn off "Ok To arm to prevent the motors from spinning after repowering the RX with low throttle and aux to arm
-			flagClear(FLAG_ARMED);		// This will prevent the copter to automatically rearm if failsafe shuts it down and prevents
-			flagClear(FLAG_OK_TO_ARM);	// to restart accidentely by just reconnect to the tx - you will have to switch off first to rearm
-			signalLED(LED_STS, LEDMODE_OFF);
+		{
+			disarm(true);
 		}
 		failsafeCnt++;
 	}
@@ -173,14 +194,11 @@ void loop(void)
 			if (rcOptions[BOXARM] && flag(FLAG_OK_TO_ARM))
 			{
 				// TODO: feature(FEATURE_FAILSAFE) && failsafeCnt == 0
-				flagSet(FLAG_ARMED);
-				signalLED(LED_STS, LEDMODE_ON);
-				headFreeModeHold = heading;
+				xTimerStart(ArmingTimer, 10);
 			}
 			else if (flag(FLAG_ARMED))
 			{
-				flagClear(FLAG_ARMED);
-				signalLED(LED_STS, LEDMODE_OFF);
+				disarm(false);
 			}
 			rcDelayCommand = 0;
 		}
@@ -188,8 +206,7 @@ void loop(void)
 		{
 			if (rcDelayCommand == 20)
 			{
-				flagClear(FLAG_ARMED); // rcDelayCommand = 20 => 20x20ms = 0.4s = time to wait for a specific RC command to be acknowledged
-				signalLED(LED_STS, LEDMODE_OFF);
+				disarm(false);
 			}
 		}
 		else if ((rcData[YAW] > cfg.maxcheck || (rcData[ROLL] > cfg.maxcheck && cfg.retarded_arm == 1))
@@ -197,9 +214,7 @@ void loop(void)
 		{
 			if (rcDelayCommand == 20)
 			{
-				flagSet(FLAG_ARMED);
-				headFreeModeHold = heading;
-				signalLED(LED_STS, LEDMODE_ON);
+				xTimerStart(ArmingTimer, 10);
 			}
 		}
 		else
@@ -702,6 +717,8 @@ void stabilize(float dT)
 portTASK_FUNCTION_PROTO(rcLoopTask, pvParameters)
 {
 	portTickType xLastWakeTime;
+
+	ArmingTimer = xTimerCreate((signed char *) "TimArming", 1000, pdFALSE, (void *) 0, armingCallback);
 
 	// Initialise the xLastWakeTime variable with the current time.
 	xLastWakeTime = xTaskGetTickCount();

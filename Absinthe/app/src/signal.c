@@ -1,7 +1,7 @@
 
 #include "main.h"
 
-#define	PATTERN_MAX_LENGHT	20
+#define	PATTERN_MAX_LENGHT	32
 
 static xTimerHandle LedTimer[3];
 static xTimerHandle BuzzerTimer;
@@ -193,7 +193,7 @@ void buzzer(uint8_t warn_vbat)
  */
 void buzzerPlay(char * pattern)
 {
-    strncpy(patternChar, pattern, 10);
+    strncpy(patternChar, pattern, PATTERN_MAX_LENGHT - 1);
 
     patternLen = strlen(patternChar);
 
@@ -248,8 +248,8 @@ void beep_handler(void)
 			case 'F': Frequency = 1397; 			break;
 			case 'G': Frequency = 1568; 			break;
 			case 'X': Frequency = 3000; 			break;
+			case 'M': Frequency = 2850; 			break;
 			case 'L': Frequency = 2700; 			break;
-			case 'M': Frequency = 2500; 			break;
 			default:  Frequency = 0;				break;
 		}
 
