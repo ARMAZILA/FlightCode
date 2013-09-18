@@ -127,19 +127,19 @@ static void simSendTxt(void)
 	{
 	case MULTITYPE_QUADP:
 		// Use armazila.quad.xml protocol congiguration file
-		ftoa((motor[0] - 1000) / 1000, buf);	// Throttle0 (all values 0...1)
+		ftoa((motor[0] - 1000) / 1000.0f, buf);	// Throttle0 (all values 0...1)
 		simPrint(buf);
 		simSendByte('\t');
 
-		ftoa((motor[1] - 1000) / 1000, buf);	// Throttle1
+		ftoa((motor[1] - 1000) / 1000.0f, buf);	// Throttle1
 		simPrint(buf);
 		simSendByte('\t');
 
-		ftoa((motor[2] - 1000) / 1000, buf);	// Throttle2
+		ftoa((motor[2] - 1000) / 1000.0f, buf);	// Throttle2
 		simPrint(buf);
 		simSendByte('\t');
 
-		ftoa((motor[3] - 1000) / 1000, buf);	// Throttle3
+		ftoa((motor[3] - 1000) / 1000.0f, buf);	// Throttle3
 		simPrint(buf);
 		simPrint("\r\n");
 
@@ -147,15 +147,15 @@ static void simSendTxt(void)
 
 	case MULTITYPE_FLYING_WING:
 		// Use armazila.wing.xml protocol congiguration file
-		ftoa((servo[0] - 1500) / 500, buf);		// Left aileron (-1...1)
+		ftoa((servo[0] - 1500) / 500.0f, buf);		// Left aileron (-1...1)
 		simPrint(buf);
 		simSendByte('\t');
 
-		ftoa((servo[1] - 1500) / 500, buf);		// Right aileron (-1...1)
+		ftoa((servo[1] - 1500) / 500.0f, buf);		// Right aileron (-1...1)
 		simPrint(buf);
 		simSendByte('\t');
 
-		ftoa((motor[0] - 1000) / 1000, buf);	// Throttle (0...1)
+		ftoa((motor[0] - 1000) / 1000.0f, buf);		// Throttle (0...1)
 		simPrint(buf);
 		simPrint("\r\n");
 
@@ -196,6 +196,10 @@ portTASK_FUNCTION_PROTO(simTask, pvParameters)
 		simReadByte = simReadByte_vcp;
 		simHasData  = simHasData_vcp;
 	}
+
+	flagSet(FLAG_ACC_CALIBRATED);
+	flagSet(FLAG_GYRO_CALIBRATED);
+	flagSet(FLAG_MAG_CALIBRATED);
 
 	// Initialise the xLastWakeTime variable with the current time.
 	xLastWakeTime = xTaskGetTickCount();
