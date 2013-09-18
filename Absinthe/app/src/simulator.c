@@ -44,7 +44,7 @@ typedef enum {
 static t_fifo_buffer		sim_Rx_Buffer_Hnd;
 static uint8_t 				sim_Rx_Buffer[ML_RX_BUFFER_SIZE];
 
-#define SIM_VCP_PORT		(cfg.uart1_mode ==  UART1_MODE_MSP ? 0 : 1)
+#define SIM_VCP_PORT		(cfg.uart1_mode == UART1_MODE_MSP ? 0 : 1)
 
 serialSendByte_t 	simSendByte = NULL;
 serialReadByte_t	simReadByte = NULL;
@@ -127,40 +127,40 @@ static void simSendTxt(void)
 	{
 	case MULTITYPE_QUADP:
 		// Use armazila.quad.xml protocol congiguration file
-		ftoa(1.0, buf);			// Throttle0 (all values 0...1)
+		ftoa((motor[0] - 1000) / 1000, buf);	// Throttle0 (all values 0...1)
 		simPrint(buf);
 		simSendByte('\t');
 
-		ftoa(0.95, buf);		// Throttle1
+		ftoa((motor[1] - 1000) / 1000, buf);	// Throttle1
 		simPrint(buf);
 		simSendByte('\t');
 
-		ftoa(0.9, buf);			// Throttle2
+		ftoa((motor[2] - 1000) / 1000, buf);	// Throttle2
 		simPrint(buf);
 		simSendByte('\t');
 
-		ftoa(0.85, buf);		// Throttle3
+		ftoa((motor[3] - 1000) / 1000, buf);	// Throttle3
 		simPrint(buf);
 		simPrint("\r\n");
-	break;
+
+		break;
 
 	case MULTITYPE_FLYING_WING:
 		// Use armazila.wing.xml protocol congiguration file
-		ftoa(0.1, buf);			// Left aileron (-1...1)
+		ftoa((servo[0] - 1500) / 500, buf);		// Left aileron (-1...1)
 		simPrint(buf);
 		simSendByte('\t');
 
-		ftoa(-0.1, buf);		// Right aileron (-1...1)
+		ftoa((servo[1] - 1500) / 500, buf);		// Right aileron (-1...1)
 		simPrint(buf);
 		simSendByte('\t');
 
-		ftoa(0.5, buf);			// Throttle (0...1)
+		ftoa((motor[0] - 1000) / 1000, buf);	// Throttle (0...1)
 		simPrint(buf);
 		simPrint("\r\n");
 
 		break;
 	}
-
 }
 
 /*
