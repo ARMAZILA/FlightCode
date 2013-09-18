@@ -731,11 +731,11 @@ static void cliStatus(char *cmdline)
 
     printf("System Uptime:     %d seconds\r\n", millis() / 1000);
 
-	ftoa(power.fbat / 10.0f, buf);
-    printf("Voltage:          %s V (%dS battery)\r\n", buf, batteryCellCount);
-	printf("Current:           %d mA\r\n", power.ibat);
-	printf("Consumed:          %u mAh\r\n", power.ebat);
-	ftoa(power.vbat / 10.0f, buf);
+	ftoa(power.flightBatteryVoltage / 10.0f, buf);
+    printf("Voltage:          %s V (%dS battery)\r\n", buf, power.flightBatteryCellCount);
+	printf("Current:           %d mA\r\n", power.flightBatteryCurrent);
+	printf("Consumed:          %u mAh\r\n", power.flightBatteryConsumed);
+	ftoa(power.videoBatteryVoltage / 10.0f, buf);
 	printf("Video Batt:       %s V\r\n", buf);
     printf("CPU clock:         %d MHz\r\n", (SystemCoreClock / 1000000));
     printf("Cycle time:        %d us\r\n", counters.cycleTime);

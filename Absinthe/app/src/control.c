@@ -1,7 +1,7 @@
 
 #include "main.h"
 
-static xTimerHandle TimerArming;
+static xTimerHandle timerArming;
 
 int16_t 	debug[4];
 uint32_t 	currentTime = 0;
@@ -35,10 +35,6 @@ int16_t AccInflightCalibrationArmed;
 uint16_t AccInflightCalibrationMeasurementDone = 0;
 uint16_t AccInflightCalibrationSavetoEEProm = 0;
 uint16_t AccInflightCalibrationActive = 0;
-
-// Battery monitoring stuff
-uint8_t batteryCellCount = 3; // cell count
-uint16_t batteryWarningVoltage; // annoying buzzer after this one, battery ready to be dead
 
 #define BREAKPOINT 1500
 
@@ -82,7 +78,12 @@ static void armingCallback(xTimerHandle pxTimer)
 	flagSet(FLAG_ARMED);
 	headFreeModeHold = heading;
 	signalLED(LED_STS, LEDMODE_ON);
+}
+
+static void arming(void)
+{
 	buzzerPlay("1EFGH EFGH 4X");
+	xTimerStart(timerArming, 10);
 }
 
 static void disarm(bool rearm)
@@ -189,7 +190,7 @@ void loop(void)
 			if (rcOptions[BOXARM] && flag(FLAG_OK_TO_ARM))
 			{
 				// TODO: feature(FEATURE_FAILSAFE) && failsafeCnt == 0
-				xTimerStart(TimerArming, 10);
+				arming();
 			}
 			else if (flag(FLAG_ARMED))
 			{
@@ -209,7 +210,7 @@ void loop(void)
 		{
 			if (rcDelayCommand == 20)
 			{
-				xTimerStart(TimerArming, 10);
+				arming();
 			}
 		}
 		else
@@ -713,7 +714,7 @@ portTASK_FUNCTION_PROTO(rcLoopTask, pvParameters)
 {
 	portTickType xLastWakeTime;
 
-	TimerArming = xTimerCreate((signed char *) "TimArming", 1500, pdFALSE, (void *) 0, armingCallback);
+	timerArming = xTimerCreate((signed char *) "TimArming", 2000, pdFALSE, (void *) 0, armingCallback);
 
 	// Initialise the xLastWakeTime variable with the current time.
 	xLastWakeTime = xTaskGetTickCount();

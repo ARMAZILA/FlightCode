@@ -37,6 +37,7 @@ const param_value_t valueTable[] = {
     { "BAT_MinCellV",	VAR_UINT8, 	&cfg.batmincellvoltage, 10, 50 },
     { "BAT_ISCALE",		VAR_UINT8, 	&cfg.batiscale, 10, 200 },
     { "BAT_IOFFSET",	VAR_INT16, 	&cfg.batioffset, -10000, 10000 },
+    { "BAT_CAPACITY",	VAR_UINT16,	&cfg.flightBatteryCapacity, 1, 10000 },
     { "BAT_ALARM",		VAR_UINT8,	&cfg.batalarm, 0, 1 },
 
     { "YAWDIR",			VAR_INT8, 	&cfg.yaw_direction, -1, 1 },
@@ -149,7 +150,7 @@ uint8_t valueTableCount = (sizeof(valueTable) / sizeof(valueTable[0]));
 config_t cfg;
 const char rcChannelLetters[] = "AERT1234";
 
-const uint8_t FLASH_CONFIG_VERSION = 39;
+const uint8_t FLASH_CONFIG_VERSION = 40;
 static uint32_t enabledSensors = 0;
 static uint32_t flagRegistor = 0;
 
@@ -382,6 +383,7 @@ static void resetFlashConfig(void)
     cfg.batiscale 				= 2;
     //cfg.ibatoffset 				= 0;
     //cfg.batalarm				= 0;		// Battery warning disable
+    cfg.flightBatteryCapacity	= 5000;
 
     // Radio
     cfg.rcprotocol				= RC_PPM;

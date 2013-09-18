@@ -11,21 +11,18 @@ counters_t		counters;				// Counters
 gyro_sensor_t	gyro_sensor;			// Structure for real time gyro sensor data
 acc_sensor_t	acc_sensor;				// Structure for real time accel sensor data
 int16_t 		mag_sensor_data[3];		// Magnetometer sensor data
+power_sensor_t	power;
 uint16_t 		acc_1G = 256;  			// this is the 1G measured acceleration.
 
-int16_t 	baro_temp;					// baro sensor temperature in 0.1 degrees
-int32_t 	BaroAlt;					// in cm. Altitude from barometr compensated by baroAltGround
-int16_t 	sonarAlt 			= -2;   // in cm, < 0: bad data
-
-power_sensor_t	power;
+int16_t 		baro_temp;				// baro sensor temperature in 0.1 degrees
+int32_t 		BaroAlt;				// in cm. Altitude from barometr compensated by baroAltGround
+int16_t 		sonarAlt 		= -2;	// in cm, < 0: bad data
 
 //extern uint16_t InflightcalibratingA;
 //extern int16_t AccInflightCalibrationArmed;
 //extern uint16_t AccInflightCalibrationMeasurementDone;
 //extern uint16_t AccInflightCalibrationSavetoEEProm;
 //extern uint16_t AccInflightCalibrationActive;
-extern uint16_t batteryWarningVoltage;
-extern uint8_t batteryCellCount;
 
 void sensorsInit(void)
 {
@@ -74,8 +71,8 @@ void batteryInit(void)
         if (voltage < i * cfg.batmaxcellvoltage)
             break;
     }
-    batteryCellCount = i;
-    batteryWarningVoltage = i * cfg.batmincellvoltage; // 3.3V per cell minimum, configurable in CLI
+    power.flightBatteryCellCount = i;
+    power.flightBatteryWarningVoltage = i * cfg.batmincellvoltage; // 3.3V per cell minimum, configurable in CLI
 }
 
 /*
@@ -522,15 +519,15 @@ portTASK_FUNCTION_PROTO(powerSensorTask, pvParameters)
     while (1)
     {
 		vbatTmp = vbatTmp * 0.9 + adcGetChannel(ADC_VIDEO_BATTERY) * 0.1;
-		power.vbat = ((vbatTmp * 3.3f) / 4095) * 60;
+		power.videoBatteryVoltage = ((vbatTmp * 3.3f) / 4095) * 60;
 
 		fbatTmp = fbatTmp * 0.9 + adcGetChannel(ADC_VOLTAGE_SENSOR) * 0.1;
 
 	    // calculate battery voltage based on ADC reading
 	    // result is Vbatt in 0.1V steps. 3.3V = ADC Vref, 4095 = 12bit adc, 60 = 6:1 voltage divider
-		power.fbat = ((fbatTmp * 3.3f) / 4095) * cfg.batvscale;
+		power.flightBatteryVoltage = ((fbatTmp * 3.3f) / 4095) * cfg.batvscale;
 
-		if ((cfg.batalarm) && (power.fbat < batteryWarningVoltage))
+		if ((cfg.batalarm) && (power.flightBatteryVoltage < power.flightBatteryWarningVoltage))
 		{
 			if (buzzerCycleCount == 0)
 			{
@@ -548,10 +545,10 @@ portTASK_FUNCTION_PROTO(powerSensorTask, pvParameters)
 
 	    // calculate battery current based on ADC reading
 	    // result is Ibatt in 1 mA steps. 3.3V = ADC Vref, 4095 = 12bit adc, 2:1 voltage divider
-		power.ibat = ((ibatTmp * 3.3f) / 4095) * cfg.batiscale - cfg.batioffset;	// Battery current in mA
+		power.flightBatteryCurrent = ((ibatTmp * 3.3f) / 4095) * cfg.batiscale - cfg.batioffset;	// Battery current in mA
 
-		ebatTmp += power.ibat / 36000.0f;
-		power.ebat = ebatTmp;						// Battery consumed energy in mAh
+		ebatTmp += power.flightBatteryCurrent / 36000.0f;
+		power.flightBatteryConsumed = ebatTmp;						// Battery consumed energy in mAh
 
 		// Wait for the next cycle.
 		vTaskDelayUntil(&xLastWakeTime, 100);		// Task cycle time 100 ms

@@ -136,7 +136,7 @@ static void sendVoltage(void)
 {
     uint16_t voltage;
 
-    voltage = (power.fbat * 110) / 21;
+    voltage = (power.flightBatteryVoltage * 110) / 21;
 
     sendDataHead(ID_VOLTAGE_AMP_BP);
     serialize16(voltage / 100);

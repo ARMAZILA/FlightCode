@@ -318,6 +318,7 @@ typedef struct config_t {
     uint8_t  	batiscale;                  // adjust this to match battery current to reported value
     int16_t  	batioffset;                 // adjust this to match battery current offset to reported value
     uint8_t	 	batalarm;					// Enable/disable low battery warning sound
+	uint16_t 	flightBatteryCapacity; 		// flight battery capacity in 1mAh
 
     // Radio/ESC-related configuration
     uint8_t 	rcprotocol;					// Radio protocol mode PWM/PPM/SPEKTRUM/SBUS
@@ -448,10 +449,13 @@ typedef struct gps_sensor_t {
 } gps_sensor_t;
 
 typedef struct power_sensor_t {
-	uint8_t 	fbat;  							// flight battery voltage in 0.1V steps
-	int16_t 	ibat; 							// flight battery current in 1mA steps. + discharge / - charge
-	uint16_t 	ebat; 							// flight battery consumed energy in 1mAh steps
-	uint8_t		vbat;  							// video battery voltage in 0.1V steps
+	uint8_t 	flightBatteryVoltage;  			// flight battery voltage in 0.1V steps
+	int16_t 	flightBatteryCurrent; 			// flight battery current in 1mA steps. + discharge / - charge
+	uint16_t 	flightBatteryConsumed; 			// flight battery consumed energy in 1mAh steps
+	uint16_t 	flightBatteryWarningVoltage;
+	uint8_t 	flightBatteryCellCount;
+	uint8_t		videoBatteryVoltage;  			// video battery voltage in 0.1V steps
+
 } power_sensor_t;
 
 /* Available Flags */
@@ -504,7 +508,6 @@ extern int16_t 	magHold;
 extern int16_t 	motor[MAX_MOTORS];
 extern int16_t 	servo[MAX_SERVOS];
 extern int16_t 	rcData[8];
-extern power_sensor_t	power;
 
 extern int16_t 	baro_temp;      // gyro sensor temperature
 extern int16_t 	lookupPitchRollRC[6];   // lookup table for expo & RC rate PITCH+ROLL
@@ -555,6 +558,7 @@ extern counters_t 		counters;
 extern acc_sensor_t		acc_sensor;
 extern gyro_sensor_t	gyro_sensor;
 extern int16_t 			mag_sensor_data[3];
+extern power_sensor_t	power;
 extern uint16_t 		acc_1G;
 void sensorsInit(void);
 portTASK_FUNCTION_PROTO(sensorTask, pvParameters);
