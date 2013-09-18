@@ -357,6 +357,16 @@ static void ml_command_long(mavlink_channel_t chan, const mavlink_message_t *msg
 		}
 		break;
 
+	case MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN:
+		if (cl.param2 > 0)
+		{
+			// TODO: Check arming status
+			mavlink_msg_statustext_send(chan, MAV_SEVERITY_INFO, "mavlink: Rebooting onboard computer");
+			vTaskDelay(1000 / portTICK_RATE_MS);	// Delay 1 second
+			systemReset(false);
+		}
+		break;
+
 	default:
 		sprintf(buf, "mavlink: COMMAND_LONG (%d) %d %d", cl.command, (int32_t) cl.param1, (int32_t) cl.param2);
 		mavlink_msg_statustext_send(chan, MAV_SEVERITY_INFO, buf);

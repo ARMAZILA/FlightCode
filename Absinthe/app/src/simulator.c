@@ -43,8 +43,7 @@ typedef enum {
 #define	ML_RX_BUFFER_SIZE	32
 static t_fifo_buffer		sim_Rx_Buffer_Hnd;
 static uint8_t 				sim_Rx_Buffer[ML_RX_BUFFER_SIZE];
-
-#define SIM_VCP_PORT		(cfg.uart1_mode == UART1_MODE_MSP ? 0 : 1)
+static uint32_t				simVcpPort;
 
 serialSendByte_t 	simSendByte = NULL;
 serialReadByte_t	simReadByte = NULL;
@@ -108,9 +107,9 @@ static uint16_t simHasData_uart1(void)			{ return (fifoBuf_getUsed(&sim_Rx_Buffe
 static uint8_t simReadByte_uart1(void)			{ return fifoBuf_getByte(&sim_Rx_Buffer_Hnd); }
 
 /* VCP helper functions */
-static void simSendByte_vcp(uint8_t data)		{ vcpSendByte(SIM_VCP_PORT, data); }
-static uint8_t simReadByte_vcp(void)			{ return vcpGetByte(SIM_VCP_PORT); }
-static uint16_t simHasData_vcp(void)			{ return vcpHasData(SIM_VCP_PORT); }
+static void simSendByte_vcp(uint8_t data)		{ vcpSendByte(simVcpPort, data); }
+static uint8_t simReadByte_vcp(void)			{ return vcpGetByte(simVcpPort); }
+static uint16_t simHasData_vcp(void)			{ return vcpHasData(simVcpPort); }
 
 /* Print string to symulator port */
 static void simPrint(char *str)
@@ -179,6 +178,8 @@ portTASK_FUNCTION_PROTO(simTask, pvParameters)
 	sim_pack_in_t * packet = (sim_pack_in_t *) &inBuf[0];
 	uint8_t gpsCycleCount = 0;
 	uint8_t sendCycleCount = 0;
+
+	simVcpPort = (cfg.uart1_mode == UART1_MODE_MSP ? 0 : 1);
 
 	if (cfg.uart1_mode == UART1_MODE_HIL)
 	{
