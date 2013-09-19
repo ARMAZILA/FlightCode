@@ -360,10 +360,14 @@ static void ml_command_long(mavlink_channel_t chan, const mavlink_message_t *msg
 	case MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN:
 		if (cl.param2 > 0)
 		{
-			// TODO: Check arming status
+			if (flag(FLAG_ARMED))
+			{
+				mavlink_msg_statustext_send(chan, MAV_SEVERITY_INFO, "mavlink: Can't rebooting when armed");
+				break;
+			}
 			mavlink_msg_statustext_send(chan, MAV_SEVERITY_INFO, "mavlink: Rebooting onboard computer");
 			vTaskDelay(1000 / portTICK_RATE_MS);	// Delay 1 second
-			systemReset(false);
+			systemReset(false);						// Don't go to bootloader
 		}
 		break;
 
