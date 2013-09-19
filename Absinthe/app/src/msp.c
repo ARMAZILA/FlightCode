@@ -314,7 +314,7 @@ static void evaluateCommand(uint8_t port)
         break;
     case MSP_BAT:
         headSerialReply(port, 3);
-        serialize8(port, power.flightBatteryVoltage);
+        serialize8(port, power_sensor.flightBatteryVoltage);
         serialize16(port, 0); // power meter trash
         break;
     case MSP_RC_TUNING:

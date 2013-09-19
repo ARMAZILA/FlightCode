@@ -119,7 +119,7 @@ typedef enum {
     GPS_MTK   = 2,
 } GPSHardware;
 
-// UART1 mode
+// UART1 mode -> serial ports remaping
 typedef enum {
     UART1_MODE_MSP = 0,		// UART1 -> MSP, 	 VCP1 -> SIM, VCP2 -> MAVLINK
     UART1_MODE_MAVLINK,		// UART1 -> MAVLINK, VCP1 -> MSP, VCP2 -> SYM
@@ -211,8 +211,7 @@ enum {
     CHECKBOXITEMS
 };
 
-/* Param types */
-/* corresponds to mavlink_message_type_t */
+/* Param types. Should correspond to mavlink_message_type_t */
 typedef enum {
     VAR_UINT8	= 1,
     VAR_INT8	= 2,
@@ -223,7 +222,7 @@ typedef enum {
 } vartype_e;
 
 /* Param table */
-typedef struct {
+typedef struct param_value_t {
     const char 		*name;
     const uint8_t 	type; // vartype_e
     void 			*ptr;
@@ -250,13 +249,6 @@ typedef struct mixer_t {
     uint8_t useServo;
     const motorMixer_t *motor;
 } mixer_t;
-
-// Align
-enum {
-    ALIGN_GYRO = 0,
-    ALIGN_ACCEL = 1,
-    ALIGN_MAG = 2
-};
 
 /* Config structure */
 typedef struct config_t {
@@ -404,6 +396,7 @@ typedef struct config_t {
     uint8_t chk;                            // XOR checksum
 } config_t;
 
+/* Sensors raw data  */
 typedef struct counter_t
 {
 	uint32_t	sensorCycleCount;				// Sensor task loop counter. Should be increased with 100 Hz freq.
@@ -455,8 +448,14 @@ typedef struct power_sensor_t {
 	uint16_t 	flightBatteryWarningVoltage;
 	uint8_t 	flightBatteryCellCount;
 	uint8_t		videoBatteryVoltage;  			// video battery voltage in 0.1V steps
-
 } power_sensor_t;
+
+typedef struct alt_sensor_t {
+	int32_t 	baroAlt;  						// in cm. Altitude from barometr
+	int32_t 	baroAltGround;					// in cm.
+	int16_t 	baroTemp;						// baro sensor temperature in 0.1 degrees
+	int16_t 	sonarAlt;						// in cm. < 0: bad data
+} alt_sensor_t;
 
 /* Available Flags */
 typedef enum {
@@ -489,40 +488,24 @@ typedef uint8_t (* serialReadByte_t)(void);
 typedef uint16_t (* serialHasData_t)(void);
 
 extern int16_t	axisPID[3];
+extern int16_t 	BaroPID;
 extern int16_t	rcCommand[4];
 extern uint8_t	rcOptions[CHECKBOXITEMS];
 extern int16_t	failsafeCnt;
-
-extern uint8_t	rssi;						// 0..255 -> 0%..100%
+extern uint8_t	rssi;					// 0..255 -> 0%..100%
 extern int16_t 	debug[4];
-extern int32_t 	BaroAlt;
-extern int32_t 	BaroAltGround;
-extern int16_t 	sonarAlt;
-extern int32_t 	EstAlt;
-extern int32_t 	AltHold;
-extern int16_t 	errorAltitudeI;
-extern int16_t 	BaroPID;
+
 extern int16_t 	headFreeModeHold;
-extern int16_t 	zVelocity;
 extern int16_t 	magHold;
 extern int16_t 	motor[MAX_MOTORS];
 extern int16_t 	servo[MAX_SERVOS];
 extern int16_t 	rcData[8];
-
-extern int16_t 	baro_temp;      // gyro sensor temperature
 extern int16_t 	lookupPitchRollRC[6];   // lookup table for expo & RC rate PITCH+ROLL
 extern int16_t 	lookupThrottleRC[11];   // lookup table for expo & mid THROTTLE
 
-extern gps_sensor_t gps;
-
 extern int16_t  nav[2];
-extern int8_t   nav_mode;                                    // Navigation mode
-extern int16_t  nav_rated[2];                                // Adding a rate controller to the navigation to make it smoother
-
-extern config_t cfg;
-
-extern const param_value_t valueTable[];
-extern uint8_t valueTableCount;
+extern int8_t   nav_mode;				// Navigation mode
+extern int16_t  nav_rated[2];			// Adding a rate controller to the navigation to make it smoother
 
 // from osd_core.c
 extern osdData_t osdData;
@@ -547,9 +530,11 @@ extern int16_t 	heading;
 extern float	angle_rad[2];
 extern float	heading_rad;
 extern int32_t  vario;
+extern int32_t 	EstAlt;
 
 void imuInit(void);
 void computeIMU(void);
+void setAltHold(int32_t newAltitude);
 void getEstimatedAltitude(void);
 void imuAHRSupdate();
 
@@ -558,7 +543,8 @@ extern counters_t 		counters;
 extern acc_sensor_t		acc_sensor;
 extern gyro_sensor_t	gyro_sensor;
 extern int16_t 			mag_sensor_data[3];
-extern power_sensor_t	power;
+extern power_sensor_t	power_sensor;
+extern alt_sensor_t		alt_sensor;
 extern uint16_t 		acc_1G;
 void sensorsInit(void);
 portTASK_FUNCTION_PROTO(sensorTask, pvParameters);
@@ -578,6 +564,10 @@ void serialCom(void);
 portTASK_FUNCTION_PROTO(mspTask, pvParameters);
 
 // Config
+extern config_t cfg;
+extern const param_value_t valueTable[];
+extern uint8_t valueTableCount;
+
 void parseRcChannels(const char *input);
 void readFlashConfig(void);
 void writeFlashConfig(uint8_t b);
@@ -610,6 +600,8 @@ void cliProcess(void);
 char *ftoa(float x, char *floatString);
 
 // gps
+extern gps_sensor_t gps;
+
 void gpsInit(uint32_t baudrate);
 void GPS_reset_home_position(void);
 void GPS_reset_nav(void);
@@ -644,6 +636,5 @@ portTASK_FUNCTION_PROTO(mavlinkTask, pvParameters);
 
 // Simulator
 portTASK_FUNCTION_PROTO(simTask, pvParameters);
-
 
 #endif

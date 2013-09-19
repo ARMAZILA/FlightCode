@@ -252,13 +252,13 @@ portTASK_FUNCTION_PROTO(simTask, pvParameters)
 	    		    gps.update 			= (gps.update == 1 ? 0 : 1);
 	    		    gps.numSat 			= 12;
 	    		    gps.hdop 			= 1;
-	    			gps.frames_rx ++;
+	    			gps.frames_rx ++;	// Just for control
 
 	    		    sensorsSet(SENSOR_GPS);
 	    		    flagSet(FLAG_GPS_FIX);
 
 	    		    xTimerReset(gpsLostTimer, 10);
-	    		    xSemaphoreGive(gpsSemaphore);
+	    		    xSemaphoreGive(gpsSemaphore);	// Signal to navigate
     			}
     		}
     	}

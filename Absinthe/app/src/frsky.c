@@ -99,7 +99,7 @@ static void sendBaro(void)
 static void sendTemperature1(void)
 {
     sendDataHead(ID_TEMPRATURE1);
-    serialize16(baro_temp / 10);
+    serialize16(alt_sensor.baroTemp / 10);
 }
 
 static void sendTime(void)
@@ -136,7 +136,7 @@ static void sendVoltage(void)
 {
     uint16_t voltage;
 
-    voltage = (power.flightBatteryVoltage * 110) / 21;
+    voltage = (power_sensor.flightBatteryVoltage * 110) / 21;
 
     sendDataHead(ID_VOLTAGE_AMP_BP);
     serialize16(voltage / 100);

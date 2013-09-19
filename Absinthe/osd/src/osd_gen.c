@@ -2293,7 +2293,7 @@ void osdScreen0(void)
 	osdWriteString(temp, GRAPHICS_RIGHT - 5, GRAPHICS_BOTTOM - 20, 0, 0, TEXT_VA_TOP, TEXT_HA_RIGHT, 0, 3);
 
 	/* Print ADC voltage FLIGHT*/
-	sprintf(temp, "BAT:%d.%dV", power.flightBatteryVoltage / 10, power.flightBatteryVoltage % 10);
+	sprintf(temp, "BAT:%d.%dV", power_sensor.flightBatteryVoltage / 10, power_sensor.flightBatteryVoltage % 10);
 	osdWriteString(temp, GRAPHICS_RIGHT - 5, GRAPHICS_BOTTOM - 40, 0, 0, TEXT_VA_TOP, TEXT_HA_RIGHT, 0, 3);
 
 	if (heading > 180)
@@ -2695,9 +2695,9 @@ void osdScreen4(void)
 
 	// Telemetry -------------------------------------------------------------------------------------
 	/* Print ADC voltage FLIGHT*/
-	sprintf(temp, "%d.%d V", power.flightBatteryVoltage / 10, power.flightBatteryVoltage % 10);
+	sprintf(temp, "%d.%d V", power_sensor.flightBatteryVoltage / 10, power_sensor.flightBatteryVoltage % 10);
 	osdWriteString(temp,  5, 0, 0, 0, TEXT_VA_TOP, TEXT_HA_LEFT, 0, FONT_OUTLINED8X14);
-	sprintf(temp, "%d mah", power.flightBatteryConsumed);
+	sprintf(temp, "%d mah", power_sensor.flightBatteryConsumed);
 	osdWriteString(temp,  5, 16, 0, 0, TEXT_VA_TOP, TEXT_HA_LEFT, 0, FONT_OUTLINED8X14);
 	sprintf(temp, "%02d:%02d:%02d", datetime.hour, datetime.minute, datetime.second);
 	osdWriteString(temp,  GRAPHICS_RIGHT - 5, 0, 0, 0, TEXT_VA_TOP, TEXT_HA_RIGHT, 0, FONT_OUTLINED8X14);

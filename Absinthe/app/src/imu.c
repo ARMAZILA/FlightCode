@@ -4,12 +4,16 @@
 
 float accLPFVel[3];
 int16_t BaroPID = 0;
-int32_t AltHold;
-int16_t errorAltitudeI = 0;
+static int32_t altitudeHold;
+static int16_t errorAltitudeI = 0;
 static int16_t acc_25deg = 0;
 static float magneticDeclination = 0.0f; 	// in radiant. Filled at startup from config
 static float accVelScale;
 static uint8_t Smoothing[3] = { 0, 0, 0 };
+float 	invG;
+int32_t accSum[3];
+uint32_t accTimeSum = 0;        		// keep track for integration of acc
+int32_t	accSumCount = 0;
 
 // **************
 // Result IMU data
@@ -21,18 +25,6 @@ float	angle_rad[2] = { 0.0f, 0.0f };
 int16_t heading		 = 0;				// Magnetic cousre -180...+180 degrees
 float	heading_rad	 = 0;
 int32_t EstAlt;             			// Altitude in cm
-
-int32_t BaroAltGround	= 0;			// in cm.
-#if 0
-float  	alt_average 	= 0.0f;
-int32_t	Altitude;					// Complexed altitude
-#endif
-
-float invG;
-
-int32_t accSum[3];
-uint32_t accTimeSum = 0;        		// keep track for integration of acc
-int accSumCount = 0;
 int32_t vario = 0;                      // variometer in cm/s
 
 typedef struct fp_vector {
@@ -48,7 +40,6 @@ typedef union {
 
 t_fp_vector EstM;
 t_fp_vector EstG;
-
 
 static void getEstimatedAttitude(void);
 
@@ -468,13 +459,13 @@ int32_t filteredAltitude(void)
     if (init_flag)
     {
     	init_flag = 0;
-    	alt = BaroAlt;
+    	alt = baroAlt;
     	return (int32_t) alt;
     }
 
     //debug[0] = BaroAlt;
 
-    errP = (alt - BaroAlt) / ACC_BARO_CMPF; 		// P term of error
+    errP = (alt - baroAlt) / ACC_BARO_CMPF; 		// P term of error
     errI += errP * ACC_BARO_I; 						// I term of error
     //debug[1] = errI * 100;
 
@@ -545,7 +536,7 @@ void getEstimatedAltitude(void)
     EstAlt = complexAltitude();
 
     // P
-    error = constrain(AltHold - EstAlt, -300, 300);
+    error = constrain(altitudeHold - EstAlt, -300, 300);
     error = applyDeadband16(error, 10); // remove small P parametr to reduce noise near zero position
     BaroPID = constrain((cfg.P8[PIDALT] * error / 100), -150, +150);
 
@@ -583,6 +574,14 @@ void getEstimatedAltitude(void)
 }
 #endif
 
+
+void setAltHold(int32_t newAltidude)
+{
+	altitudeHold = newAltidude;
+	errorAltitudeI = 0;
+	BaroPID = 0;
+}
+
 void getEstimatedAltitude(void)
 {
     uint32_t dTime = 50000;
@@ -595,7 +594,7 @@ void getEstimatedAltitude(void)
     static float accAlt = 0.0f;
     static int32_t lastBaroAlt;
 
-    BaroAlt_fil = BaroAlt_fil * cfg.baro_noise_lpf + BaroAlt * (1.0f - cfg.baro_noise_lpf); // additional LPF to reduce baro noise
+    BaroAlt_fil = BaroAlt_fil * cfg.baro_noise_lpf + alt_sensor.baroAlt * (1.0f - cfg.baro_noise_lpf); // additional LPF to reduce baro noise
 
     // Integrator - velocity, cm/sec
     vel_calc = (float) accSum[2] * accVelScale * (float) accTimeSum / (float) accSumCount;
@@ -615,7 +614,7 @@ void getEstimatedAltitude(void)
     accSum_reset();
 
     //P
-    error = constrain(AltHold - EstAlt, -300, 300);
+    error = constrain(altitudeHold - EstAlt, -300, 300);
     error = applyDeadband(error, 10);       // remove small P parametr to reduce noise near zero position
     BaroPID = constrain((cfg.P8[PIDALT] * error / 128), -150, +150);
 

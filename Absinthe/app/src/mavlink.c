@@ -172,9 +172,9 @@ static void ml_send_1Hz(mavlink_channel_t chan)
    		sensors(SENSOR_GPS) << 5 |	// GPS
    		1 << 15,					// motor outputs / control
    		counters.cycleTime / 10,	// Maximum usage in percent of the mainloop time, (0%: 0, 100%: 1000)
-		power.flightBatteryVoltage * 100,	// Battery voltage, in millivolts (1 = 1 millivolt)
-		power.flightBatteryCurrent / 10,	// Battery current, in 10*milliamperes (1 = 10 milliampere)
-		(cfg.flightBatteryCapacity - power.flightBatteryConsumed) / cfg.flightBatteryCapacity * 100, // Remaining battery energy: (0%: 0, 100%: 100)
+		power_sensor.flightBatteryVoltage * 100,	// Battery voltage, in millivolts (1 = 1 millivolt)
+		power_sensor.flightBatteryCurrent / 10,	// Battery current, in 10*milliamperes (1 = 10 milliampere)
+		(cfg.flightBatteryCapacity - power_sensor.flightBatteryConsumed) / cfg.flightBatteryCapacity * 100, // Remaining battery energy: (0%: 0, 100%: 100)
 		0,							// Communication drops in percent, (0%: 0, 100%: 10'000)
 		packet_drops,				// Communication errors
 		0,							// Autopilot-specific errors
@@ -362,7 +362,7 @@ static void ml_command_long(mavlink_channel_t chan, const mavlink_message_t *msg
 		{
 			if (flag(FLAG_ARMED))
 			{
-				mavlink_msg_statustext_send(chan, MAV_SEVERITY_INFO, "mavlink: Can't rebooting when armed");
+				mavlink_msg_statustext_send(chan, MAV_SEVERITY_INFO, "mavlink: Can't reboot when armed");
 				break;
 			}
 			mavlink_msg_statustext_send(chan, MAV_SEVERITY_INFO, "mavlink: Rebooting onboard computer");

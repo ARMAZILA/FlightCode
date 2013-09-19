@@ -93,7 +93,7 @@ portTASK_FUNCTION_PROTO(initTask, pvParameters)
 		rcReadRawFunc = sbusReadRawRC;
 	}
 
-	if (cfg.gps_baudrate)
+	if (cfg.gps_baudrate && cfg.hil_mode == 0)
 		gpsInit(cfg.gps_baudrate);
 
 	/* Initialize tasks */

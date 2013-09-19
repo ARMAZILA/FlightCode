@@ -343,12 +343,8 @@ void loop(void)
 			if (!flag(FLAG_ALTHOLD_MODE))
 			{
 				flagSet(FLAG_ALTHOLD_MODE);
-				AltHold = EstAlt;
-				if (AltHold < 30)
-					AltHold = 30;
+				setAltHold(EstAlt);
 				initialThrottleHold = rcCommand[THROTTLE];
-				errorAltitudeI = 0;
-				BaroPID = 0;
 			}
 		}
 		else
@@ -509,7 +505,7 @@ void loop(void)
 
 	if (flag(FLAG_HEADFREE_MODE))
 	{
-		float radDiff = (heading - headFreeModeHold) * M_PI / 180.0f;
+		float radDiff = DEG2RAD(heading - headFreeModeHold);
 		float cosDiff = cosf(radDiff);
 		float sinDiff = sinf(radDiff);
 		int16_t rcCommand_PITCH = rcCommand[PITCH] * cosDiff + rcCommand[ROLL] * sinDiff;
@@ -624,7 +620,7 @@ void loop(void)
 }
 
 //
-// Calculates all axis PIDs, than call mixer
+// Calculates all axis PIDs
 // Input : dT - delta time in seconds
 //
 void stabilize(float dT)

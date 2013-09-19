@@ -663,10 +663,10 @@ static void cliSensor(char *cmdline)
 	ftoa(cfg.acc_magnitude, buf);
 	printf("1G magnitude      = %s\r\n\r\n", buf);
 
-	printf("Baro Temp         = %d.%d\r\n", baro_temp / 10, abs(baro_temp) % 10);
-	printf("Baro alt (cm)     = %d\r\n", BaroAlt);
-	printf("Baro alt ground   = %d\r\n", BaroAltGround);
-	printf("Sonar alt (cm)    = %d\r\n", sonarAlt);
+	printf("Baro Temp         = %d.%d\r\n", alt_sensor.baroTemp / 10, abs(alt_sensor.baroTemp) % 10);
+	printf("Baro alt (cm)     = %d\r\n", alt_sensor.baroAlt);
+	printf("Baro alt ground   = %d\r\n", alt_sensor.baroAltGround);
+	printf("Sonar alt (cm)    = %d\r\n", alt_sensor.sonarAlt);
 	printf("GPS altitude      = %d\r\n", gps.altitude);
 	printf("Altitude          = %d\r\n", EstAlt);
 
@@ -731,11 +731,11 @@ static void cliStatus(char *cmdline)
 
     printf("System Uptime:     %d seconds\r\n", millis() / 1000);
 
-	ftoa(power.flightBatteryVoltage / 10.0f, buf);
-    printf("Voltage:          %s V (%dS battery)\r\n", buf, power.flightBatteryCellCount);
-	printf("Current:           %d mA\r\n", power.flightBatteryCurrent);
-	printf("Consumed:          %u mAh\r\n", power.flightBatteryConsumed);
-	ftoa(power.videoBatteryVoltage / 10.0f, buf);
+	ftoa(power_sensor.flightBatteryVoltage / 10.0f, buf);
+    printf("Voltage:          %s V (%dS battery)\r\n", buf, power_sensor.flightBatteryCellCount);
+	printf("Current:           %d mA\r\n", power_sensor.flightBatteryCurrent);
+	printf("Consumed:          %u mAh\r\n", power_sensor.flightBatteryConsumed);
+	ftoa(power_sensor.videoBatteryVoltage / 10.0f, buf);
 	printf("Video Batt:       %s V\r\n", buf);
     printf("CPU clock:         %d MHz\r\n", (SystemCoreClock / 1000000));
     printf("Cycle time:        %d us\r\n", counters.cycleTime);
