@@ -123,7 +123,7 @@ static void ml_send_1Hz(mavlink_channel_t chan)
 {
 	// Pack the message
 	mavlink_msg_heartbeat_send(chan, mavlink_system.type,
-		MAV_AUTOPILOT_GENERIC,
+		MAV_AUTOPILOT_ARMAZILA,
 		system_mode,
 		custom_mode,
 		system_state
