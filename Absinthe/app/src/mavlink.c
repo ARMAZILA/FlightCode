@@ -129,6 +129,8 @@ static void ml_send_1Hz(mavlink_channel_t chan)
 		system_state
 	);
 
+#define FLY_BATTERY_REMAINING	(cfg.flightBatteryCapacity - power_sensor.flightBatteryConsumed) / cfg.flightBatteryCapacity * 100
+
 	mavlink_msg_sys_status_send(chan,
 /* Value of 1: present. Indices:
 	0: 3D gyro,
@@ -171,10 +173,11 @@ static void ml_send_1Hz(mavlink_channel_t chan)
    		1 << 4 |					// differential pressure
    		sensors(SENSOR_GPS) << 5 |	// GPS
    		1 << 15,					// motor outputs / control
+
    		counters.cycleTime / 10,	// Maximum usage in percent of the mainloop time, (0%: 0, 100%: 1000)
 		power_sensor.flightBatteryVoltage * 100,	// Battery voltage, in millivolts (1 = 1 millivolt)
 		power_sensor.flightBatteryCurrent / 10,	// Battery current, in 10*milliamperes (1 = 10 milliampere)
-		(cfg.flightBatteryCapacity - power_sensor.flightBatteryConsumed) / cfg.flightBatteryCapacity * 100, // Remaining battery energy: (0%: 0, 100%: 100)
+		FLY_BATTERY_REMAINING, 		// Remaining battery energy: (0%: 0, 100%: 100)
 		0,							// Communication drops in percent, (0%: 0, 100%: 10'000)
 		packet_drops,				// Communication errors
 		0,							// Autopilot-specific errors
@@ -187,9 +190,9 @@ static void ml_send_1Hz(mavlink_channel_t chan)
 	mavlink_msg_gps_raw_int_send(chan,
 		(uint64_t) micros(),
 		3,						// fix_type
-		gps.coord[LAT], // 55.667248 * 1e7,		// Latitude in 1E7 degrees
-		gps.coord[LON], // 37.601129 * 1e7,		// Longitude in 1E7 degrees
-		EstAlt * 10,			// Altitude in 1E3 meters (millimeters) above MSL
+		gps.coord[LAT],			// Latitude in 1E7 degrees
+		gps.coord[LON],			// Longitude in 1E7 degrees
+		gps.altitude * 100,		// Altitude in 1E3 meters (millimeters) above MSL
 		gps.hdop,				// HDOP in cm (m*100). If unknown, set to: 65535
 		65535,					// VDOP in cm (m*100). If unknown, set to: 65535
 		gps.speed,				// GPS ground speed (m/s * 100). If unknown, set to: 65535
