@@ -225,10 +225,11 @@ static void accSensorUpdate(void)
  * measurements, the function reads data from the buffer and averages them.
  *
  * The results of the function is stored in the following variables:
- * gyro_data_scaled - Scaled to deg/sec real angles
- * gyro_average		- Average value
- * gyro_variance 	- Standard deviation
- * gyro_temp        - Temperature sensor data. Refresh rate 1 Hz
+ * gyro_sensor.data_deg - Scaled to deg/sec real angles
+ * gyro_sensor.data_rad - Scaled to rad/sec real angles
+ * gyro_sensor.average	- Average value
+ * gyro_sensor.variance	- Standard deviation
+ * gyro_sensor.temp     - Temperature sensor data. Refresh rate 1 Hz
  *
  * If defined USE_GYRO_ZERO_THRESHOLD small values of angular velocities are equal to zero.
  *
@@ -292,10 +293,6 @@ static void gyroSensorUpdate(void)
 		gyro_vari_sqrt[axis] = gyro_vari_sqrt[axis] * (1 - GYRO_LPF_VARIANCE) +
 				pow(gyro_sensor.data_deg[axis] - gyro_sensor.average[axis], 2) * GYRO_LPF_VARIANCE;
 		gyro_sensor.variance[axis] = sqrtf(gyro_vari_sqrt[axis]);
-
-#if USE_GYRO_ZERO_THRESHOLD
-		if (fabs(gyro_data[axis]) < (gyro_variance[axis] * 3.0f)) gyro_data[axis] = 0.0f;
-#endif
 	}
 
 	if (flag(FLAG_CALIBRATE_GYRO))

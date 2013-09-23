@@ -1,6 +1,6 @@
-   Armazila Absinth code - for board "110-10-04-02 (10dM3UOP88)"
+Armazila Absinth code for board "110-10-04-02 (10dM3UOP88)"
 
-An Open Source STM32 Based Universal flight control system
+An Open Source STM32 based Universal Flight Control system
 
 Used code and/or ideas of the following projects:
 
