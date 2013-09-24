@@ -454,17 +454,19 @@ portTASK_FUNCTION_PROTO(sensorTask, pvParameters)
 		counters.sensorReadTime = counters.sensorReadTime * 0.99 + sensorReadTime * 0.01;
 		debug[3] = counters.sensorReadTime;
 
-		// TODO: Switch off IMU by cfg.hil_mode
-		switch (cfg.imu_algorithm)
+		if (cfg.hil_mode != 2)
 		{
-		case 1:
-			computeIMU();
-			break;
+			switch (cfg.imu_algorithm)
+			{
+			case 1:
+				computeIMU();
+				break;
 
-		case 2:
-			imuAHRSupdate();
-			break;
-	    }
+			case 2:
+				imuAHRSupdate();
+				break;
+			}
+		}
 
 		static uint32_t pTime;
 		uint32_t cTime = micros();

@@ -93,8 +93,7 @@ portTASK_FUNCTION_PROTO(initTask, pvParameters)
 		rcReadRawFunc = sbusReadRawRC;
 	}
 
-	if (cfg.gps_baudrate && cfg.hil_mode == 0)
-		gpsInit(cfg.gps_baudrate);
+	gpsInit(cfg.gps_baudrate);
 
 	/* Initialize tasks */
 	//			Task_func				        Task_name   Stack	   	 Param	 Prio			 Handler

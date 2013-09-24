@@ -29,7 +29,7 @@ void mp_message_handler(mavlink_channel_t chan, mavlink_message_t* msg);
 
 #include "fifo_buffer.h"
 
-#define	ML_RX_BUFFER_SIZE	32
+#define	ML_RX_BUFFER_SIZE	256
 static t_fifo_buffer		ml_Rx_Buffer_Hnd;
 static uint8_t 				ml_Rx_Buffer[ML_RX_BUFFER_SIZE];
 

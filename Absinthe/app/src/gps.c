@@ -584,6 +584,9 @@ void gpsInit(uint32_t baudrate)
 
     GPS_set_pids();
 
+    if (cfg.gps_baudrate == 0 || cfg.hil_mode != 0)
+    	return;		// GPS not configured or HIL mode
+
     uartInit(GPS_UART, baudrate, GPS_NewData);
 
     if (cfg.gps_type == GPS_UBLOX)
