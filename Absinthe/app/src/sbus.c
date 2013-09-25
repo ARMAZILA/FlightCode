@@ -34,7 +34,7 @@ int16_t sbusReadRawRC(uint8_t channel)
 	}
 
 	// Perhaps you may change the term "/ 2 + 976" -> center will be 1486
-	return sbusValue[channel] / 2 + 976;
+	return sbusValue[channel] / 1.5 + 816.0;
 }
 
 /**

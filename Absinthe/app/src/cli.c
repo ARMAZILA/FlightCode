@@ -439,29 +439,18 @@ static void cliHelp(char *cmdline)
 
 static void cliMap(char *cmdline)
 {
-    uint32_t len;
     uint32_t i;
-    char out[9];
 
-    len = strlen(cmdline);
+    printf("Current assignment\r\n");
+    printf("Func    Chan\r\n");
+    printf("------------\r\n");
+    printf("Roll    %d\r\n", cfg.rcmap[0]);
+    printf("Pitch   %d\r\n", cfg.rcmap[1]);
+    printf("Yaw     %d\r\n", cfg.rcmap[2]);
+    printf("Thro    %d\r\n", cfg.rcmap[3]);
 
-    if (len == 8) {
-        // uppercase it
-        for (i = 0; i < 8; i++)
-            cmdline[i] = toupper(cmdline[i]);
-        for (i = 0; i < 8; i++) {
-            if (strchr(rcChannelLetters, cmdline[i]) && !strchr(cmdline + i + 1, cmdline[i]))
-                continue;
-            printf("Must be any order of AETR1234\r\n");
-            return;
-        }
-        parseRcChannels(cmdline);
-    }
-    printf("Current assignment: ");
-    for (i = 0; i < 8; i++)
-        out[cfg.rcmap[i]] = rcChannelLetters[i];
-    out[i] = '\0';
-    printf("%s\r\n", out);
+    for (i = 4; i < 16; i++)
+        printf("Aux%d    %d\r\n", i - 3, cfg.rcmap[i]);
 }
 
 static void cliMixer(char *cmdline)

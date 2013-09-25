@@ -18,6 +18,7 @@ typedef struct {
     float		airspeed;	// Air speed 0.1 m/s
     float		groundspeed;// Ground speed 0.1 m/s
     float		downspeed;	// m/s
+    float		dummy;
     float		acc_x;		// m/ss
     float		acc_y;		// m/ss
     float		acc_z;		// m/ss
@@ -215,50 +216,55 @@ portTASK_FUNCTION_PROTO(simTask, pvParameters)
 
     		if (sim_parse_char(ch, (char *) packet))
     		{
-    			// Aply value from simulator
-    			// 0 - HIL off
-    		    // 1 - sensor off
-    		    // 2 - sensor & IMU off
-
-    			if (cfg.hil_mode == 2)
+    			if (packet->dummy == 0)
     			{
-        			angle[ROLL ]		= swap_float(packet->roll) * 10;
-        			angle[PITCH]		= -swap_float(packet->pitch) * 10;
-        			angle_rad[ROLL ]	= DEG2RAD(swap_float(packet->roll));
-        			angle_rad[PITCH]	= -DEG2RAD(swap_float(packet->pitch));
-        			heading 			= swap_float(packet->head);
-        			heading_rad			= DEG2RAD(swap_float(packet->head));
-        			EstAlt 				= swap_float(packet->alt);
-    			}
 
-    		    accSmooth[ROLL ]	= swap_float(packet->acc_x) / 9.80665f * acc_1G;
-    		    accSmooth[PITCH] 	= swap_float(packet->acc_y) / 9.80665f * acc_1G;
-    		    accSmooth[YAW  ]   	= -swap_float(packet->acc_z) / 9.80665f * acc_1G;
+					// Aply value from simulator
+					// 0 - HIL off
+					// 1 - sensor off
+					// 2 - sensor & IMU off
 
-    			gyroData[ROLL ]		= swap_float(packet->gyro_x);
-    			gyroData[PITCH]		= swap_float(packet->gyro_y);
-    			gyroData[YAW  ]		= swap_float(packet->gyro_z);
+					if (cfg.hil_mode == 2)
+					{
+						angle[ROLL ]		= swap_float(packet->roll) * 10;
+						angle[PITCH]		= -swap_float(packet->pitch) * 10;
+						angle_rad[ROLL ]	= DEG2RAD(swap_float(packet->roll));
+						angle_rad[PITCH]	= -DEG2RAD(swap_float(packet->pitch));
+						heading 			= swap_float(packet->head);
+						heading_rad			= DEG2RAD(swap_float(packet->head));
+						EstAlt 				= swap_float(packet->alt);
+					}
 
-    			if (gpsCycleCount == 20)
-    			{
-    				// Simulate 5Hz GPS update
-    				gpsCycleCount = 0;
+					accSmooth[ROLL ]	= swap_float(packet->acc_x) / 9.80665f * acc_1G;
+					accSmooth[PITCH] 	= swap_float(packet->acc_y) / 9.80665f * acc_1G;
+					accSmooth[YAW  ]   	= -swap_float(packet->acc_z) / 9.80665f * acc_1G;
 
-					gps.coord[LAT] 		= swap_float(packet->lat) * 1e7;
-					gps.coord[LON] 		= swap_float(packet->lon) * 1e7;
-	    			gps.altitude		= swap_float(packet->alt) / 10.0f;
-	    			gps.speed			= swap_float(packet->groundspeed);
-	    			gps.ground_course 	= swap_float(packet->head) * 10;
-	    		    gps.update 			= (gps.update == 1 ? 0 : 1);
-	    		    gps.numSat 			= 12;
-	    		    gps.hdop 			= 1;
-	    			gps.frames_rx ++;	// Just for control
+					gyroData[ROLL ]		= swap_float(packet->gyro_x);
+					gyroData[PITCH]		= swap_float(packet->gyro_y);
+					gyroData[YAW  ]		= swap_float(packet->gyro_z);
 
-	    		    sensorsSet(SENSOR_GPS);
-	    		    flagSet(FLAG_GPS_FIX);
+					if (gpsCycleCount == 20)
+					{
+						// Simulate 5Hz GPS update
+						gpsCycleCount = 0;
 
-	    		    xTimerReset(gpsLostTimer, 10);
-	    		    xSemaphoreGive(gpsSemaphore);	// Signal to navigate
+						gps.coord[LAT] 		= swap_float(packet->lat) * 1e7;
+						gps.coord[LON] 		= swap_float(packet->lon) * 1e7;
+						gps.altitude		= swap_float(packet->alt) / 10.0f;
+						gps.speed			= swap_float(packet->groundspeed);
+						gps.ground_course 	= swap_float(packet->head) * 10;
+						gps.update 			= (gps.update == 1 ? 0 : 1);
+						gps.numSat 			= 12;
+						gps.hdop 			= 1;
+						gps.frames_rx ++;	// Just for control
+
+						sensorsSet(SENSOR_GPS);
+						flagSet(FLAG_GPS_FIX);
+
+						xTimerReset(gpsLostTimer, 10);
+						xSemaphoreGive(gpsSemaphore);	// Signal to navigate
+					}
+
     			}
     		}
     	}

@@ -314,7 +314,7 @@ typedef struct config_t {
 
     // Radio/ESC-related configuration
     uint8_t 	rcprotocol;					// Radio protocol mode PWM/PPM/SPEKTRUM/SBUS
-    uint8_t 	rcmap[8];                   // mapping of radio channels to internal RPYTA+ order
+    uint8_t 	rcmap[16];                  // mapping of radio channels to internal RPYTA+ order
     uint8_t		failsafe;					// Enable failsafe feature
     uint8_t deadband;                       // introduce a deadband around the stick center for pitch and roll axis. Must be greater than zero.
     uint8_t yawdeadband;                    // introduce a deadband around the stick center for yaw axis. Must be greater than zero.

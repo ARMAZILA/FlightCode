@@ -78,9 +78,9 @@ int16_t spektrumReadRawRC(uint8_t chan)
         data = cfg.midrc;
     } else {
         if (cfg.spektrum_hires)
-            data = 988 + (spekChannelData[cfg.rcmap[chan]] >> 1);   // 2048 mode
+            data = 988 + (spekChannelData[chan] >> 1);   // 2048 mode
         else
-            data = 988 + spekChannelData[cfg.rcmap[chan]];          // 1024 mode
+            data = 988 + spekChannelData[chan];          // 1024 mode
     }
     
     return data;

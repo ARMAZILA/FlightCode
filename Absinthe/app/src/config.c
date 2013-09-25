@@ -10,16 +10,32 @@ const param_value_t valueTable[] = {
     { "MAVLINK_COMPID",	VAR_UINT8,  &cfg.mavlink_compid, 	0, 255 },
 
     { "RC_PROTOCOL",	VAR_UINT8, 	&cfg.rcprotocol, 0, 3 },
+    { "RC_MAP_ROLL",	VAR_UINT8, 	&cfg.rcmap[0], 0, 17 },
+    { "RC_MAP_PITCH",	VAR_UINT8, 	&cfg.rcmap[1], 0, 17 },
+    { "RC_MAP_YAW",		VAR_UINT8, 	&cfg.rcmap[2], 0, 17 },
+    { "RC_MAP_THRO",	VAR_UINT8, 	&cfg.rcmap[3], 0, 17 },
+    { "RC_MAP_AUX1",	VAR_UINT8, 	&cfg.rcmap[4], 0, 17 },
+    { "RC_MAP_AUX2",	VAR_UINT8, 	&cfg.rcmap[5], 0, 17 },
+    { "RC_MAP_AUX3",	VAR_UINT8, 	&cfg.rcmap[6], 0, 17 },
+    { "RC_MAP_AUX4",	VAR_UINT8, 	&cfg.rcmap[7], 0, 17 },
+    { "RC_MAP_AUX5",	VAR_UINT8, 	&cfg.rcmap[8], 0, 17 },
+    { "RC_MAP_AUX6",	VAR_UINT8, 	&cfg.rcmap[9], 0, 17 },
+    { "RC_MAP_AUX7",	VAR_UINT8, 	&cfg.rcmap[10], 0, 17 },
+    { "RC_MAP_AUX8",	VAR_UINT8, 	&cfg.rcmap[11], 0, 17 },
+    { "RC_MAP_AUX9",	VAR_UINT8, 	&cfg.rcmap[12], 0, 17 },
+    { "RC_MAP_AUX10",	VAR_UINT8, 	&cfg.rcmap[13], 0, 17 },
+    { "RC_MAP_AUX11",	VAR_UINT8, 	&cfg.rcmap[14], 0, 17 },
+    { "RC_MAP_AUX12",	VAR_UINT8, 	&cfg.rcmap[15], 0, 17 },
     { "RC_RetArm",		VAR_UINT8, 	&cfg.retarded_arm, 0, 1 },
     { "RC_DB",			VAR_UINT8, 	&cfg.deadband, 0, 32 },
     { "RC_DB_Y",		VAR_UINT8, 	&cfg.yawdeadband, 0, 100 },
     { "AltHoldThroN",	VAR_UINT8, 	&cfg.alt_hold_throttle_neutral, 1, 250 },
     { "RC_MID",			VAR_UINT16, &cfg.midrc, 1200, 1700 },
-    { "RC_MinThro",		VAR_UINT16, &cfg.minthrottle, 0, 2000 },
-    { "RC_MaxThro",		VAR_UINT16, &cfg.maxthrottle, 0, 2000 },
-    { "RC_MinCmd",		VAR_UINT16, &cfg.mincommand, 0, 2000 },
-    { "RC_MinChk",		VAR_UINT16, &cfg.mincheck, 0, 2000 },
-    { "RC_MaxChk",		VAR_UINT16, &cfg.maxcheck, 0, 2000 },
+    { "RC_MINTHRO",		VAR_UINT16, &cfg.minthrottle, 0, 2000 },
+    { "RC_MAXTHRO",		VAR_UINT16, &cfg.maxthrottle, 0, 2000 },
+    { "RC_MINCMD",		VAR_UINT16, &cfg.mincommand, 0, 2000 },
+    { "RC_MINCHK",		VAR_UINT16, &cfg.mincheck, 0, 2000 },
+    { "RC_MAXCHK",		VAR_UINT16, &cfg.maxcheck, 0, 2000 },
     { "RC_MOTORSTOP", 	VAR_UINT8,  &cfg.motor_stop, 0, 1 },
     { "RC_FAILSAFE", 	VAR_UINT8,  &cfg.failsafe, 0, 1 },
     { "RC_FS_DELAY",	VAR_UINT8, 	&cfg.failsafe_delay, 0, 200 },
@@ -148,24 +164,11 @@ const param_value_t valueTable[] = {
 uint8_t valueTableCount = (sizeof(valueTable) / sizeof(valueTable[0]));
 
 config_t cfg;
-const char rcChannelLetters[] = "AERT1234";
-
-const uint8_t FLASH_CONFIG_VERSION = 40;
+const uint8_t FLASH_CONFIG_VERSION = 41;
 static uint32_t enabledSensors = 0;
 static uint32_t flagRegistor = 0;
 
 static void resetFlashConfig(void);
-
-void parseRcChannels(const char *input)
-{
-    const char *c, *s;
-
-    for (c = input; *c; c++) {
-        s = strchr(rcChannelLetters, *c);
-        if (s)
-            cfg.rcmap[s - rcChannelLetters] = c - input;
-    }
-}
 
 static uint8_t validFlashConfig(void)
 {
@@ -292,7 +295,7 @@ void checkFirstTime(bool reset)
 // Default settings
 static void resetFlashConfig(void)
 {
-    int i;
+    uint8_t i;
 
     memset(&cfg, 0, sizeof(config_t));
 
@@ -387,7 +390,8 @@ static void resetFlashConfig(void)
 
     // Radio
     cfg.rcprotocol				= RC_PPM;
-    parseRcChannels("AETR1234");
+    for (i = 0; i < 16; i++)
+    	cfg.rcmap[i] = i;
     cfg.failsafe				= 0;
     // cfg.deadband = 0;
     // cfg.yawdeadband = 0;

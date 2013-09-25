@@ -100,6 +100,13 @@
 				<node>/velocities/speed-down-fps</node>
 				<factor>0.3048</factor>
 			</chunk> 
+
+			<chunk>
+				<name>dummy</name>
+				<type>int</type>
+				<node>/velocities/speed-down-fps</node>
+				<factor>0.0</factor>
+			</chunk> 
 			
 			<!-- ##### IMU ##### -->
 			<chunk>

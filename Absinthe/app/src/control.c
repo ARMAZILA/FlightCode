@@ -42,7 +42,7 @@ int16_t rxReadRawRC(uint8_t chan)
 {
 	uint16_t data;
 
-	data = pwmRead(cfg.rcmap[chan]);
+	data = pwmRead(chan);
 	if (data < 750 || data > 2250)
 		data = cfg.midrc;
 
@@ -60,7 +60,7 @@ void computeRC(void)
 	rc4ValuesIndex++;
 	for (chan = 0; chan < 8; chan++)
 	{
-		rcData4Values[chan][rc4ValuesIndex % 4] = rcReadRawFunc(chan);
+		rcData4Values[chan][rc4ValuesIndex % 4] = rcReadRawFunc(cfg.rcmap[chan]);
 		rcDataMean[chan] = 0;
 		for (a = 0; a < 4; a++)
 			rcDataMean[chan] += rcData4Values[chan][a];
