@@ -4,16 +4,20 @@
  *  Created on: 05.06.2013
  *      Author: avgorbi
  *
- * 		Code to read Futaba S.Bus receiver serial stream
+ * 		Read Futaba S.Bus receiver serial stream
  *
  */
 
 /* Includes */
 #include "sbus.h"
 
-static volatile uint16_t rcValue[SBUS_NUM_INPUTS] = {1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502, 1502}; // interval [1000;2000]
-// Channel order for SBUS RX Configs
-//static uint8_t rcChannel[SBUS_NUM_INPUTS] = {PITCH, YAW, THROTTLE, ROLL, AUX1, AUX2, AUX3, AUX4, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17};
+static volatile uint16_t sbusValue[SBUS_NUM_INPUTS]; 	// interval [1000;2000]
+
+/*
+ // Channel order for SBUS RX Configs
+ static uint8_t rcChannel[SBUS_NUM_INPUTS] =
+ 	{PITCH, YAW, THROTTLE, ROLL, AUX1, AUX2, AUX3, AUX4, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17};
+*/
 
 /**
  * Get the value of an input channel
@@ -30,7 +34,7 @@ int16_t sbusReadRawRC(uint8_t channel)
 	}
 
 	// Perhaps you may change the term "/ 2 + 976" -> center will be 1486
-	return rcValue[channel] / 2 + 976;
+	return sbusValue[channel] / 2 + 976;
 }
 
 /**
@@ -53,28 +57,28 @@ void sbusCallback(uint16_t data)
 		sbusIndex = 0;
 
 		/* unroll channels 1-8 */
-		rcValue[0] = ((sbus[1] | sbus[2] << 8) & 0x07FF);
-		rcValue[1] = ((sbus[2] >> 3 | sbus[3] << 5) & 0x07FF);
-		rcValue[2] = ((sbus[3] >> 6 | sbus[4] << 2 | sbus[5] << 10) & 0x07FF);
-		rcValue[3] = ((sbus[5] >> 1 | sbus[6] << 7) & 0x07FF);
-		rcValue[4] = ((sbus[6] >> 4 | sbus[7] << 4) & 0x07FF);
-		rcValue[5] = ((sbus[7] >> 7 | sbus[8] << 1 | sbus[9] << 9) & 0x07FF);
-		rcValue[6] = ((sbus[9] >> 2 | sbus[10] << 6) & 0x07FF);
-		rcValue[7] = ((sbus[10] >> 5 | sbus[11] << 3) & 0x07FF);
+		sbusValue[0] = ((sbus[1] | sbus[2] << 8) & 0x07FF);
+		sbusValue[1] = ((sbus[2] >> 3 | sbus[3] << 5) & 0x07FF);
+		sbusValue[2] = ((sbus[3] >> 6 | sbus[4] << 2 | sbus[5] << 10) & 0x07FF);
+		sbusValue[3] = ((sbus[5] >> 1 | sbus[6] << 7) & 0x07FF);
+		sbusValue[4] = ((sbus[6] >> 4 | sbus[7] << 4) & 0x07FF);
+		sbusValue[5] = ((sbus[7] >> 7 | sbus[8] << 1 | sbus[9] << 9) & 0x07FF);
+		sbusValue[6] = ((sbus[9] >> 2 | sbus[10] << 6) & 0x07FF);
+		sbusValue[7] = ((sbus[10] >> 5 | sbus[11] << 3) & 0x07FF);
 
 		/* unroll channels 9-16 */
-		rcValue[8] = ((sbus[12] | sbus[13] << 8) & 0x07FF);
-		rcValue[9] = ((sbus[13] >> 3 | sbus[14] << 5) & 0x07FF);
-		rcValue[10] = ((sbus[14] >> 6 | sbus[15] << 2 | sbus[16] << 10) & 0x07FF);
-		rcValue[11] = ((sbus[16] >> 1 | sbus[17] << 7) & 0x07FF);
-		rcValue[12] = ((sbus[17] >> 4 | sbus[18] << 4) & 0x07FF);
-		rcValue[13] = ((sbus[18] >> 7 | sbus[19] << 1 | sbus[20] << 9) & 0x07FF);
-		rcValue[14] = ((sbus[20] >> 2 | sbus[21] << 6) & 0x07FF);
-		rcValue[15] = ((sbus[21] >> 5 | sbus[22] << 3) & 0x07FF);
+		sbusValue[8] = ((sbus[12] | sbus[13] << 8) & 0x07FF);
+		sbusValue[9] = ((sbus[13] >> 3 | sbus[14] << 5) & 0x07FF);
+		sbusValue[10] = ((sbus[14] >> 6 | sbus[15] << 2 | sbus[16] << 10) & 0x07FF);
+		sbusValue[11] = ((sbus[16] >> 1 | sbus[17] << 7) & 0x07FF);
+		sbusValue[12] = ((sbus[17] >> 4 | sbus[18] << 4) & 0x07FF);
+		sbusValue[13] = ((sbus[18] >> 7 | sbus[19] << 1 | sbus[20] << 9) & 0x07FF);
+		sbusValue[14] = ((sbus[20] >> 2 | sbus[21] << 6) & 0x07FF);
+		sbusValue[15] = ((sbus[21] >> 5 | sbus[22] << 3) & 0x07FF);
 
 		/* unroll discrete channels 17 and 18 */
-		rcValue[16] = (sbus[23] & SBUS_FLAG_DC1) ? SBUS_VALUE_MAX : SBUS_VALUE_MIN;
-		rcValue[17] = (sbus[23] & SBUS_FLAG_DC2) ? SBUS_VALUE_MAX : SBUS_VALUE_MIN;
+		sbusValue[16] = (sbus[23] & SBUS_FLAG_DC1) ? SBUS_VALUE_MAX : SBUS_VALUE_MIN;
+		sbusValue[17] = (sbus[23] & SBUS_FLAG_DC2) ? SBUS_VALUE_MAX : SBUS_VALUE_MIN;
 
 		// Failsafe: there is one Bit in the SBUS-protocol (Byte 25, Bit 4) whitch is the failsafe-indicator-bit
 		if (cfg.failsafe)
@@ -93,6 +97,11 @@ void sbusCallback(uint16_t data)
 /* Initialise S.Bus receiver interface */
 void sbusInit(void)
 {
+	uint8_t i;
+
+	for (i = 0; i < SBUS_NUM_INPUTS; i++)
+		sbusValue[i] = 1486;
+
 	/* Init UART5 for S.Bus protocol */
 	uartInit(SERIAL_UART5, 100000, sbusCallback);
 

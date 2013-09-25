@@ -8,6 +8,7 @@ Used code and/or ideas of the following projects:
  - Afrodevices
  - S.O.H. Madgwick
  - Openpilot
+ - MAVLink
  - FreeRTOS
  - STMicroelectronics
 
