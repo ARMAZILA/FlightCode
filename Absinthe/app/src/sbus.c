@@ -29,11 +29,12 @@ static volatile uint16_t sbusValue[SBUS_NUM_INPUTS]; 	// interval [1000;2000]
 int16_t sbusReadRawRC(uint8_t channel)
 {
 	/* return error if channel is not available */
-	if (channel >= SBUS_NUM_INPUTS) {
+	if (channel >= SBUS_NUM_INPUTS)
+	{
 		return RCVR_INVALID;
 	}
 
-	// Perhaps you may change the term "/ 2 + 976" -> center will be 1486
+	/* Perhaps you may change the term "/ 2 + 976" -> center will be 1486 */
 	return sbusValue[channel] / 1.5 + 816.0;
 }
 

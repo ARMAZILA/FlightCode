@@ -41,6 +41,6 @@ void pwmInit(uint8_t mode,
 		uint16_t pwm_group3_rate,
 		uint16_t pwm_group4_rate);
 void pwmWrite(uint8_t index, uint16_t value);
-uint16_t pwmRead(uint8_t channel);
+int16_t pwmRead(uint8_t channel);
 uint8_t pwmGetOutputNumber(void);
 

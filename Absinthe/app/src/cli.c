@@ -433,24 +433,22 @@ static void cliHelp(char *cmdline)
     printf("Available commands:\r\n\r\n");
     for (i = 0; i < CMD_COUNT; i++)
         printf("%s\t\t%s\r\n", cmdTable[i].name, cmdTable[i].param);
-
-    //printf("\r\nUse folowing keys:\r\n");
 }
 
 static void cliMap(char *cmdline)
 {
-    uint32_t i;
+    uint8_t i;
 
     printf("Current assignment\r\n");
-    printf("Func    Chan\r\n");
+    printf("Func\tChan\r\n");
     printf("------------\r\n");
-    printf("Roll    %d\r\n", cfg.rcmap[0]);
-    printf("Pitch   %d\r\n", cfg.rcmap[1]);
-    printf("Yaw     %d\r\n", cfg.rcmap[2]);
-    printf("Thro    %d\r\n", cfg.rcmap[3]);
+    printf("Roll\t%d\r\n", cfg.rcmap[0]);
+    printf("Pitch\t%d\r\n", cfg.rcmap[1]);
+    printf("Yaw\t%d\r\n", cfg.rcmap[2]);
+    printf("Thro\t%d\r\n", cfg.rcmap[3]);
 
     for (i = 4; i < 16; i++)
-        printf("Aux%d    %d\r\n", i - 3, cfg.rcmap[i]);
+        printf("Aux%d\t%d\r\n", i - 3, cfg.rcmap[i]);
 }
 
 static void cliMixer(char *cmdline)
@@ -715,8 +713,6 @@ static void cliStatus(char *cmdline)
     uint8_t i;
     uint32_t mask;
 	char buf[12];
-	float Temp;
-	uint16_t sz, ds0, ds1, ds2;
 
     printf("System Uptime:     %d seconds\r\n", millis() / 1000);
 
@@ -732,12 +728,10 @@ static void cliStatus(char *cmdline)
     printf("I2C Errors:        %d\r\n", i2cGetErrorCounter());
     printf("Watchdog events:   %d\r\n", cfg.wdg_counter);
 
-	float Temp_Voltage = adcGetChannel(ADC_TEMP_SENSOR) * 3.3 / 4095.0;
-	const float STM32_TEMP_V25 = 1.43; /* V */
-	const float STM32_TEMP_AVG_SLOPE = 4.3; /* mV/C */
-	Temp = (STM32_TEMP_V25 - Temp_Voltage) * 1000.0 / STM32_TEMP_AVG_SLOPE + 25.0;
-	ftoa(Temp, buf);
+	ftoa(cpuTemp() / 10.0f, buf);
 	printf("CPU Temp:         %s deg C\r\n", buf);
+
+	uint16_t sz, ds0, ds1, ds2;
 
 	sz = *(__IO uint16_t*)(0x1FFFF7E0);
 	printf("Flash memory size: %d kB\r\n", sz);

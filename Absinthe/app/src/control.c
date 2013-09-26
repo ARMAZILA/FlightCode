@@ -40,7 +40,7 @@ uint16_t AccInflightCalibrationActive = 0;
 
 int16_t rxReadRawRC(uint8_t chan)
 {
-	uint16_t data;
+	int16_t data;
 
 	data = pwmRead(chan);
 	if (data < 750 || data > 2250)
@@ -60,7 +60,7 @@ void computeRC(void)
 	rc4ValuesIndex++;
 	for (chan = 0; chan < 8; chan++)
 	{
-		rcData4Values[chan][rc4ValuesIndex % 4] = rcReadRawFunc(cfg.rcmap[chan]);
+		rcData4Values[chan][rc4ValuesIndex % 4] = rcReadRawFunc(cfg.rcmap[chan] - 1);
 		rcDataMean[chan] = 0;
 		for (a = 0; a < 4; a++)
 			rcDataMean[chan] += rcData4Values[chan][a];
@@ -110,16 +110,11 @@ void loop(void)
 
 	currentTime = micros();
 
-	// this will return false if spektrum is disabled. shrug.
-	if (spektrumFrameComplete())
-		computeRC();
-
 	/* Reload IWDG counter */
 	IWDG_ReloadCounter();
 
-	// TODO clean this up. computeRC should handle this check
-	if (cfg.rcprotocol != RC_SPEKTRUM)
-		computeRC();
+	/* Read RC chanels data to rcData */
+	computeRC();
 
 	// Failsafe routine
 	if (cfg.failsafe)
@@ -348,7 +343,9 @@ void loop(void)
 			}
 		}
 		else
+		{
 			flagClear(FLAG_ALTHOLD_MODE);
+		}
 	}
 
 	if (sensors(SENSOR_MAG))
@@ -362,7 +359,9 @@ void loop(void)
 			}
 		}
 		else
+		{
 			flagClear(FLAG_MAG_MODE);
+		}
 		if (rcOptions[BOXHEADFREE])
 		{
 			if (!flag(FLAG_HEADFREE_MODE))

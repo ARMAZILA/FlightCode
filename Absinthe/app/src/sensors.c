@@ -21,7 +21,7 @@ uint16_t 		acc_1G = 256;  			// this is the 1G measured acceleration.
 //extern uint16_t AccInflightCalibrationSavetoEEProm;
 //extern uint16_t AccInflightCalibrationActive;
 
-void sensorsInit(void)
+void sensorInit(void)
 {
 	if (!l3gd20Detect()) {
 		// if this fails, we get a beep + blink pattern. we're doomed, no gyro or i2c error.
@@ -46,6 +46,17 @@ void sensorsInit(void)
     if (lps331apDetect()) {
     	sensorsSet(SENSOR_BARO);
     }
+}
+
+/*
+ * Return CPU temperature in 0.1 degrees celsius
+ */
+int16_t cpuTemp(void)
+{
+	float Temp_Voltage = adcGetChannel(ADC_TEMP_SENSOR) * 3.3 / 4095.0;
+	const float STM32_TEMP_V25 = 1.43; 			/* V */
+	const float STM32_TEMP_AVG_SLOPE = 4.3; 	/* mV/C */
+	return ((STM32_TEMP_V25 - Temp_Voltage) * 1000.0 / STM32_TEMP_AVG_SLOPE + 25.0) * 10;
 }
 
 void batteryInit(void)

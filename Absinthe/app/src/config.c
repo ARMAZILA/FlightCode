@@ -9,23 +9,24 @@ const param_value_t valueTable[] = {
     { "MAVLINK_SYSID",	VAR_UINT8,  &cfg.mavlink_sysid, 	0, 255 },
     { "MAVLINK_COMPID",	VAR_UINT8,  &cfg.mavlink_compid, 	0, 255 },
 
+    { "RCMAP_ROLL",		VAR_UINT8, 	&cfg.rcmap[0], 1, 18 },
+    { "RCMAP_PITCH",	VAR_UINT8, 	&cfg.rcmap[1], 1, 18 },
+    { "RCMAP_YAW",		VAR_UINT8, 	&cfg.rcmap[2], 1, 18 },
+    { "RCMAP_THRO",		VAR_UINT8, 	&cfg.rcmap[3], 1, 18 },
+    { "RCMAP_AUX1",		VAR_UINT8, 	&cfg.rcmap[4], 1, 18 },
+    { "RCMAP_AUX2",		VAR_UINT8, 	&cfg.rcmap[5], 1, 18 },
+    { "RCMAP_AUX3",		VAR_UINT8, 	&cfg.rcmap[6], 1, 18 },
+    { "RCMAP_AUX4",		VAR_UINT8, 	&cfg.rcmap[7], 1, 18 },
+    { "RCMAP_AUX5",		VAR_UINT8, 	&cfg.rcmap[8], 1, 18 },
+    { "RCMAP_AUX6",		VAR_UINT8, 	&cfg.rcmap[9], 1, 18 },
+    { "RCMAP_AUX7",		VAR_UINT8, 	&cfg.rcmap[10], 1, 18 },
+    { "RCMAP_AUX8",		VAR_UINT8, 	&cfg.rcmap[11], 1, 18 },
+    { "RCMAP_AUX9",		VAR_UINT8, 	&cfg.rcmap[12], 1, 18 },
+    { "RCMAP_AUX10",	VAR_UINT8, 	&cfg.rcmap[13], 1, 18 },
+    { "RCMAP_AUX11",	VAR_UINT8, 	&cfg.rcmap[14], 1, 18 },
+    { "RCMAP_AUX12",	VAR_UINT8, 	&cfg.rcmap[15], 1, 18 },
+
     { "RC_PROTOCOL",	VAR_UINT8, 	&cfg.rcprotocol, 0, 3 },
-    { "RC_MAP_ROLL",	VAR_UINT8, 	&cfg.rcmap[0], 0, 17 },
-    { "RC_MAP_PITCH",	VAR_UINT8, 	&cfg.rcmap[1], 0, 17 },
-    { "RC_MAP_YAW",		VAR_UINT8, 	&cfg.rcmap[2], 0, 17 },
-    { "RC_MAP_THRO",	VAR_UINT8, 	&cfg.rcmap[3], 0, 17 },
-    { "RC_MAP_AUX1",	VAR_UINT8, 	&cfg.rcmap[4], 0, 17 },
-    { "RC_MAP_AUX2",	VAR_UINT8, 	&cfg.rcmap[5], 0, 17 },
-    { "RC_MAP_AUX3",	VAR_UINT8, 	&cfg.rcmap[6], 0, 17 },
-    { "RC_MAP_AUX4",	VAR_UINT8, 	&cfg.rcmap[7], 0, 17 },
-    { "RC_MAP_AUX5",	VAR_UINT8, 	&cfg.rcmap[8], 0, 17 },
-    { "RC_MAP_AUX6",	VAR_UINT8, 	&cfg.rcmap[9], 0, 17 },
-    { "RC_MAP_AUX7",	VAR_UINT8, 	&cfg.rcmap[10], 0, 17 },
-    { "RC_MAP_AUX8",	VAR_UINT8, 	&cfg.rcmap[11], 0, 17 },
-    { "RC_MAP_AUX9",	VAR_UINT8, 	&cfg.rcmap[12], 0, 17 },
-    { "RC_MAP_AUX10",	VAR_UINT8, 	&cfg.rcmap[13], 0, 17 },
-    { "RC_MAP_AUX11",	VAR_UINT8, 	&cfg.rcmap[14], 0, 17 },
-    { "RC_MAP_AUX12",	VAR_UINT8, 	&cfg.rcmap[15], 0, 17 },
     { "RC_RetArm",		VAR_UINT8, 	&cfg.retarded_arm, 0, 1 },
     { "RC_DB",			VAR_UINT8, 	&cfg.deadband, 0, 32 },
     { "RC_DB_Y",		VAR_UINT8, 	&cfg.yawdeadband, 0, 100 },
@@ -390,8 +391,6 @@ static void resetFlashConfig(void)
 
     // Radio
     cfg.rcprotocol				= RC_PPM;
-    for (i = 0; i < 16; i++)
-    	cfg.rcmap[i] = i;
     cfg.failsafe				= 0;
     // cfg.deadband = 0;
     // cfg.yawdeadband = 0;
@@ -401,6 +400,10 @@ static void resetFlashConfig(void)
     cfg.mincheck 				= 1100;
     cfg.maxcheck 				= 1900;
     // cfg.retarded_arm = 0;       // disable arm/disarm on roll left/right
+
+    // Function to channel mapping
+    for (i = 0; i < 16; i++)
+    	cfg.rcmap[i] = i + 1;
 
     // Failsafe Variables
     cfg.failsafe_delay 			= 10;    	// 1sec

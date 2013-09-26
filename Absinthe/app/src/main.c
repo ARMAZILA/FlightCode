@@ -105,7 +105,7 @@ portTASK_FUNCTION_PROTO(initTask, pvParameters)
 		xTaskCreate(simTask, 	 (signed char *) "HIL",     512, (void *) NULL,  2, (xTaskHandle *) NULL);
 
 	/* Initialize sensors. Do it before starting watch dog timer */
-	sensorsInit();
+	sensorInit();
 
 	/* Init Watch-dog. Do not forget call IWDG_ReloadCounter() in time
 	   less then 250ms.  We do it in main loop - rcLoopTask */

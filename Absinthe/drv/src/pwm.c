@@ -381,8 +381,14 @@ void pwmWrite(uint8_t index, uint16_t value)
         *pwmPorts[index].ccr = value;
 }
 
-uint16_t pwmRead(uint8_t channel)
+int16_t pwmRead(uint8_t channel)
 {
+	/* return error if channel is not available */
+	if (channel >= MAX_INPUTS)
+	{
+		return -1;
+	}
+
     return captures[channel];
 }
 

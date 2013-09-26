@@ -10,28 +10,12 @@ static uint8_t spek_chan_mask;
 static bool rcFrameComplete = false;
 static bool spekDataIncoming = false;
 volatile uint8_t spekFrame[SPEK_FRAME_SIZE];
-static void spektrumDataReceive(uint16_t c);
 
 // external vars (ugh)
 extern int16_t failsafeCnt;
 
-void spektrumInit(void)
-{
-    if (cfg.spektrum_hires) {
-        // 11 bit frames
-        spek_chan_shift = 3;
-        spek_chan_mask = 0x07;
-    } else {
-        // 10 bit frames
-        spek_chan_shift = 2;
-        spek_chan_mask = 0x03;
-    }
-
-    uartInit(SERIAL_UART3, 115200, spektrumDataReceive);
-}
-
 // UART Receive ISR callback
-static void spektrumDataReceive(uint16_t c)
+static void spektrumCallback(uint16_t c)
 {
     uint32_t spekTime;
     static uint32_t spekTimeLast, spekTimeInterval;
@@ -41,13 +25,19 @@ static void spektrumDataReceive(uint16_t c)
     spekTime = micros();
     spekTimeInterval = spekTime - spekTimeLast;
     spekTimeLast = spekTime;
+
     if (spekTimeInterval > 5000) 
         spekFramePosition = 0;
+
     spekFrame[spekFramePosition] = (uint8_t)c;
-    if (spekFramePosition == SPEK_FRAME_SIZE - 1) {
+
+    if (spekFramePosition == SPEK_FRAME_SIZE - 1)
+    {
         rcFrameComplete = true;
         failsafeCnt = 0;   // clear FailSafe counter
-    } else {
+    }
+    else
+    {
         spekFramePosition++;
     }
 }
@@ -57,26 +47,30 @@ bool spektrumFrameComplete(void)
     return rcFrameComplete;
 }
 
-// static const uint8_t spekRcChannelMap[SPEK_MAX_CHANNEL] = {1, 2, 3, 0, 4, 5, 6};
-
 int16_t spektrumReadRawRC(uint8_t chan)
 {
     uint16_t data;
     static uint32_t spekChannelData[SPEK_MAX_CHANNEL];
     uint8_t b;
 
-    if (rcFrameComplete) {
-        for (b = 3; b < SPEK_FRAME_SIZE; b += 2) {
+    if (rcFrameComplete)
+    {
+        for (b = 3; b < SPEK_FRAME_SIZE; b += 2)
+        {
             uint8_t spekChannel = 0x0F & (spekFrame[b - 1] >> spek_chan_shift);
+
             if (spekChannel < SPEK_MAX_CHANNEL) 
                 spekChannelData[spekChannel] = ((uint32_t)(spekFrame[b - 1] & spek_chan_mask) << 8) + spekFrame[b];
         }
         rcFrameComplete = false;
     }
 
-    if (chan >= SPEK_MAX_CHANNEL || !spekDataIncoming) {
+    if (chan >= SPEK_MAX_CHANNEL || !spekDataIncoming)
+    {
         data = cfg.midrc;
-    } else {
+    }
+    else
+    {
         if (cfg.spektrum_hires)
             data = 988 + (spekChannelData[chan] >> 1);   // 2048 mode
         else
@@ -84,4 +78,23 @@ int16_t spektrumReadRawRC(uint8_t chan)
     }
     
     return data;
+}
+
+void spektrumInit(void)
+{
+    if (cfg.spektrum_hires)
+    {
+        // 11 bit frames
+        spek_chan_shift = 3;
+        spek_chan_mask = 0x07;
+    }
+    else
+    {
+        // 10 bit frames
+        spek_chan_shift = 2;
+        spek_chan_mask = 0x03;
+    }
+
+    // TODO: Check port to connect spektrum receiver
+    uartInit(SERIAL_UART3, 115200, spektrumCallback);
 }
