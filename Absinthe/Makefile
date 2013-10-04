@@ -249,18 +249,18 @@ $(OBJECT_DIR)/$(TARGET)/%.o: %.S
 
 # Print size
 size:
-	arm-none-eabi-size --format=berkeley $(TARGET_ELF)
+	$(SIZE) --format=berkeley $(TARGET_ELF)
 	@echo 'Finished building: $@'
 	@echo ' '
 
 clean:
-	@rm -f $(TARGET_HEX) $(TARGET_ELF) $(TARGET_OBJS) $(TARGET_MAP)
+	@cs-rm -f $(TARGET_HEX) $(TARGET_ELF) $(TARGET_OBJS) $(TARGET_MAP)
 
 help:
-	@echo ""
-	@echo "Makefile for the Lite firmware"
-	@echo ""
-	@echo "Usage:"
-	@echo "        make [TARGET=<target>] [OPTIONS=\"<options>\"]"
-	@echo ""
-	@echo "Valid TARGET values are: $(VALID_TARGETS)"
+	@echo ' '
+	@echo 'Makefile for the 10dM3UOP88 firmware'
+	@echo ' '
+	@echo 'Usage:'
+	@echo '    make [TARGET=<target>] [OPTIONS=<options>]'
+	@echo ' '
+	@echo 'Valid TARGET values are: $(VALID_TARGETS)'

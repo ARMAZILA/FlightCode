@@ -119,12 +119,12 @@ typedef enum {
     GPS_MTK   = 2,
 } GPSHardware;
 
-// UART1 mode -> serial ports remaping
+// Serial ports map
 typedef enum {
-    UART1_MODE_MSP = 0,		// UART1 -> MSP, 	 VCP1 -> SIM, VCP2 -> MAVLINK
-    UART1_MODE_MAVLINK,		// UART1 -> MAVLINK, VCP1 -> MSP, VCP2 -> SYM
-    UART1_MODE_HIL,			// UART1 -> SIM, 	 VCP1 -> MSP, VCP2 -> MAVLINK
-} UART1_MODE_t;
+    PORT_MAP_UART1xMSP_VCP1xSIM_VCP2xMAVLINK = 0,	// UART1 -> MSP, 	 VCP1 -> SIM, VCP2 -> MAVLINK
+    PORT_MAP_UART1xMAVLINK_VCP1xMSP_VCP2xSYM = 1,	// UART1 -> MAVLINK, VCP1 -> MSP, VCP2 -> SYM
+    PORT_MAP_UART1xSIM_VCP1xMSP_VCP2xMAVLINK = 2,	// UART1 -> SIM, 	 VCP1 -> MSP, VCP2 -> MAVLINK
+} PORT_MAP_t;
 
 typedef struct gpio_config_t
 {
@@ -385,7 +385,7 @@ typedef struct config_t {
     uint8_t 	osd_screen;					// OSD screen number
     uint16_t 	wdg_counter;				// Watch-dog reboot event counter
 
-    uint8_t 	uart1_mode;					// UART1 mode: see UART1_MODE_t ENUM
+    uint8_t 	port_map;					// Serial ports map: see PORT_MAP_t ENUM
     uint32_t 	uart1_baudrate;				// UART1 baudrate
 
     uint8_t		mavlink_sysid;				// MAVLink system ID

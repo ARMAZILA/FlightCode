@@ -485,8 +485,8 @@ portTASK_FUNCTION_PROTO(mspTask, pvParameters)
 {
 	portTickType xLastWakeTime;
 
-	// Setup port depending cfg.uart1_mode: see UART1_MODE_t ENUM
-	if (cfg.uart1_mode == UART1_MODE_MSP)
+	// Setup port depending cfg.uart1_mode: see PORT_MAP_t ENUM
+	if (cfg.port_map == PORT_MAP_UART1xMSP_VCP1xSIM_VCP2xMAVLINK)
 	{
 		fifoBuf_init(&msp_Rx_Buffer_Hnd, &msp_Rx_Buffer, MSP_RX_BUFFER_SIZE);
 		uartInit(MSP_UART, cfg.uart1_baudrate, mspCallback);

@@ -494,7 +494,7 @@ portTASK_FUNCTION_PROTO(mavlinkTask, pvParameters)
 	// TODO: Decode MW mixer type
 	mavlink_system.type   = MAV_TYPE_QUADROTOR; 	///< This system is an quadrocopter.
 
-	if (cfg.uart1_mode == UART1_MODE_MAVLINK)
+	if (cfg.port_map == PORT_MAP_UART1xMAVLINK_VCP1xMSP_VCP2xSYM)
 	{
 		fifoBuf_init(&ml_Rx_Buffer_Hnd, &ml_Rx_Buffer, ML_RX_BUFFER_SIZE);
 

@@ -18,7 +18,6 @@ typedef struct {
     float		airspeed;	// Air speed 0.1 m/s
     float		groundspeed;// Ground speed 0.1 m/s
     float		downspeed;	// m/s
-    float		dummy;
     float		acc_x;		// m/ss
     float		acc_y;		// m/ss
     float		acc_z;		// m/ss
@@ -180,9 +179,7 @@ portTASK_FUNCTION_PROTO(simTask, pvParameters)
 	uint8_t gpsCycleCount = 0;
 	uint8_t sendCycleCount = 0;
 
-	simVcpPort = (cfg.uart1_mode == UART1_MODE_MSP ? 0 : 1);
-
-	if (cfg.uart1_mode == UART1_MODE_HIL)
+	if (cfg.port_map == PORT_MAP_UART1xSIM_VCP1xMSP_VCP2xMAVLINK)
 	{
 		fifoBuf_init(&sim_Rx_Buffer_Hnd, &sim_Rx_Buffer, ML_RX_BUFFER_SIZE);
 
@@ -194,6 +191,8 @@ portTASK_FUNCTION_PROTO(simTask, pvParameters)
 	}
 	else
 	{
+		simVcpPort = cfg.port_map;
+
 		simSendByte = simSendByte_vcp;
 		simReadByte = simReadByte_vcp;
 		simHasData  = simHasData_vcp;
@@ -216,57 +215,54 @@ portTASK_FUNCTION_PROTO(simTask, pvParameters)
 
     		if (sim_parse_char(ch, (char *) packet))
     		{
-    			if (packet->dummy == 0)
-    			{
 
-					// Aply value from simulator
-					// 0 - HIL off
-					// 1 - sensor off
-					// 2 - sensor & IMU off
+				// Aply value from simulator
+				// 0 - HIL off
+				// 1 - sensor off
+				// 2 - sensor & IMU off
 
-					if (cfg.hil_mode == 2)
-					{
-						angle[ROLL ]		= swap_float(packet->roll) * 10;
-						angle[PITCH]		= -swap_float(packet->pitch) * 10;
-						angle_rad[ROLL ]	= DEG2RAD(swap_float(packet->roll));
-						angle_rad[PITCH]	= -DEG2RAD(swap_float(packet->pitch));
-						heading 			= swap_float(packet->head);
-						heading_rad			= DEG2RAD(swap_float(packet->head));
-						EstAlt 				= swap_float(packet->alt);
-					}
+				if (cfg.hil_mode == 2)
+				{
+					angle[ROLL ]		= swap_float(packet->roll) * 10;
+					angle[PITCH]		= -swap_float(packet->pitch) * 10;
+					angle_rad[ROLL ]	= DEG2RAD(swap_float(packet->roll));
+					angle_rad[PITCH]	= -DEG2RAD(swap_float(packet->pitch));
+					heading 			= swap_float(packet->head);
+					heading_rad			= DEG2RAD(swap_float(packet->head));
+					EstAlt 				= swap_float(packet->alt);
+				}
 
-					accSmooth[ROLL ]	= swap_float(packet->acc_x) / 9.80665f * acc_1G;
-					accSmooth[PITCH] 	= swap_float(packet->acc_y) / 9.80665f * acc_1G;
-					accSmooth[YAW  ]   	= -swap_float(packet->acc_z) / 9.80665f * acc_1G;
+				accSmooth[ROLL ]	= swap_float(packet->acc_x) / 9.80665f * acc_1G;
+				accSmooth[PITCH] 	= swap_float(packet->acc_y) / 9.80665f * acc_1G;
+				accSmooth[YAW  ]   	= -swap_float(packet->acc_z) / 9.80665f * acc_1G;
 
-					gyroData[ROLL ]		= swap_float(packet->gyro_x);
-					gyroData[PITCH]		= swap_float(packet->gyro_y);
-					gyroData[YAW  ]		= swap_float(packet->gyro_z);
+				gyroData[ROLL ]		= swap_float(packet->gyro_x);
+				gyroData[PITCH]		= swap_float(packet->gyro_y);
+				gyroData[YAW  ]		= swap_float(packet->gyro_z);
 
-					if (gpsCycleCount == 20)
-					{
-						// Simulate 5Hz GPS update
-						gpsCycleCount = 0;
+				if (gpsCycleCount == 20)
+				{
+					// Simulate 5Hz GPS update
+					gpsCycleCount = 0;
 
-						gps.coord[LAT] 		= swap_float(packet->lat) * 1e7;
-						gps.coord[LON] 		= swap_float(packet->lon) * 1e7;
-						gps.altitude		= swap_float(packet->alt) / 10.0f;
-						gps.speed			= swap_float(packet->groundspeed);
-						gps.ground_course 	= swap_float(packet->head) * 10;
-						gps.update 			= (gps.update == 1 ? 0 : 1);
-						gps.numSat 			= 12;
-						gps.hdop 			= 1;
-						gps.frames_rx ++;	// Just for control
+					gps.coord[LAT] 		= swap_float(packet->lat) * 1e7;
+					gps.coord[LON] 		= swap_float(packet->lon) * 1e7;
+					gps.altitude		= swap_float(packet->alt) / 10.0f;
+					gps.speed			= swap_float(packet->groundspeed);
+					gps.ground_course 	= swap_float(packet->head) * 10;
+					gps.update 			= (gps.update == 1 ? 0 : 1);
+					gps.numSat 			= 12;
+					gps.hdop 			= 1;
+					gps.frames_rx ++;	// Just for control
 
-						sensorsSet(SENSOR_GPS);
-						flagSet(FLAG_GPS_FIX);
+					sensorsSet(SENSOR_GPS);
+					flagSet(FLAG_GPS_FIX);
 
-						xTimerReset(gpsLostTimer, 10);
-						xSemaphoreGive(gpsSemaphore);	// Signal to navigate
-					}
+					xTimerReset(gpsLostTimer, 10);
+					xSemaphoreGive(gpsSemaphore);	// Signal to navigate
+				}
 
-    			}
-    		}
+			}
     	}
 
     	if (gpsCycleCount < 20)

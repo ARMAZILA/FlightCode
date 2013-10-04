@@ -158,7 +158,7 @@ const param_value_t valueTable[] = {
     { "IMUALGORITHM",	VAR_UINT8, 	&cfg.imu_algorithm, 1, 4 },
     { "HIL_MODE",		VAR_UINT8, 	&cfg.hil_mode, 0, 2 },
 
-    { "UART1_MODE",		VAR_UINT8,  &cfg.uart1_mode, 0, 2 },
+    { "PORT_MAP",		VAR_UINT8,  &cfg.port_map, 0, 2 },
     { "UART1_BAUDRATE",	VAR_UINT32, &cfg.uart1_baudrate, 1200, 115200 },
 };
 
@@ -464,7 +464,7 @@ static void resetFlashConfig(void)
 
     cfg.wdg_counter 			= 0;
 
-    cfg.uart1_mode				= 2;	// HIL
+    cfg.port_map				= 2;	// HIL
     cfg.uart1_baudrate			= 115200;
 
     cfg.hil_mode				= 0;
