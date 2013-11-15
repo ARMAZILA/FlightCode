@@ -94,7 +94,9 @@ bool lps331apDetect(void)
 {
 	uint8_t deviceid;
 
-	i2cRead(LPS331AP_ADDRESS, LPS331AP_WHO_AM_I, 1, &deviceid);
+	if (!i2cRead(LPS331AP_ADDRESS, LPS331AP_WHO_AM_I, 1, &deviceid))
+		return false;
+
 	if (deviceid != LPS331AP_ID)
 		return false;
 

@@ -108,12 +108,17 @@ bool l3gd20Config(void)
     if (!ack) return false;
 
     i2cWrite(L3GD20_ADDRESS, L3GD20_CTRL_REG1, L3GD20_POWER_ON | L3GD20_ODR_760HZ);
+    if (!ack) return false;
+
 #if USE_SENSOR_IRQ
     i2cWrite(L3GD20_ADDRESS, L3GD20_CTRL_REG3, L3GD20_I2_DRDY);
 #endif
+
     i2cWrite(L3GD20_ADDRESS, L3GD20_CTRL_REG5, L3GD20_FIFO_EN);
+    if (!ack) return false;
 
     i2cWrite(L3GD20_ADDRESS, L3GD20_FIFO_CTRL_REG, L3GD20_STREAM_MODE);
+    if (!ack) return false;
 
     return true;
 }
@@ -122,7 +127,9 @@ bool l3gd20Detect(void)
 {
     uint8_t deviceid;
 
-    i2cRead(L3GD20_ADDRESS, L3GD20_WHO_AM_I, 1, &deviceid);
+    if (!i2cRead(L3GD20_ADDRESS, L3GD20_WHO_AM_I, 1, &deviceid))
+    	return false;
+
     if (deviceid != L3GD20_ID)
         return false;
 
