@@ -177,6 +177,7 @@ CFLAGS = -DUSE_STDPERIPH_DRIVER \
 	-std=gnu99 \
 	$(OPT_$(TARGET)) \
 	-Wall \
+	-MD \
 	-Wa,-adhlns="$@.lst" \
 	-funsigned-bitfields \
 	-c \
@@ -264,3 +265,5 @@ help:
 	@echo '    make [TARGET=<target>] [OPTIONS=<options>]'
 	@echo ' '
 	@echo 'Valid TARGET values are: $(VALID_TARGETS)'
+
+-include $(TARGET_OBJS:.o=.d)
