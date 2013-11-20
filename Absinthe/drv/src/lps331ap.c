@@ -112,13 +112,13 @@ void lps331apRead(float* Pressure_mb, float* Temperature_DegC)
 	uint8_t pu8[3];
 
 	// Read the Temperature measurement (2 bytes to read)
-	i2cRead(LPS331AP_ADDRESS, LPS331AP_TEMP_OUT, 2, pu8); // @0x2B~2C
+	i2cRead(LPS331AP_ADDRESS, LPS331AP_TEMP_OUT, 2, pu8); 	// @0x2B~2C
 
-	int16_t Temp_Reg_s16 = ((u16) pu8[1] << 8) | pu8[0]; // make a SIGNED 16 bit variable
-	*Temperature_DegC = 42.5 + Temp_Reg_s16 / 480; // scale and offset
+	int16_t Temp_Reg_s16 = ((u16) pu8[1] << 8) | pu8[0]; 	// make a SIGNED 16 bit variable
+	*Temperature_DegC = 42.5 + Temp_Reg_s16 / 480; 			// scale and offset
 
 	// Read the Temperature-compensated Pressure measurement
-	i2cRead(LPS331AP_ADDRESS, LPS331AP_PRESS_OUT, 3, pu8); // reading auto-incremented @0x28/29/2A
+	i2cRead(LPS331AP_ADDRESS, LPS331AP_PRESS_OUT, 3, pu8); 	// reading auto-incremented @0x28/29/2A
 
 	uint32_t pressure_u32 = ((u32) pu8[2] << 16) | ((u32) pu8[1] << 8) | pu8[0];
 
