@@ -43,6 +43,9 @@ const param_value_t valueTable[] = {
     { "RC_FS_OFf_DEL",	VAR_UINT8, 	&cfg.failsafe_off_delay, 0, 200 },
     { "RC_FS_THROTT", 	VAR_UINT16, &cfg.failsafe_throttle, 1000, 2000 },
     { "RC_SPEK_HIRES",	VAR_UINT8, 	&cfg.spektrum_hires, 0, 1 },
+    { "RC_RP_RATE",		VAR_UINT8, 	&cfg.rollPitchRate, 0, 255 },
+    { "RC_Y_RATE",		VAR_UINT8, 	&cfg.yawRate, 0, 255 },
+    { "RC_RATE",		VAR_UINT8, 	&cfg.rcRate8, 0, 255 },
 
     { "PWM_RATEGROUP1",	VAR_UINT16, &cfg.pwm_group1_rate, 50, 498 },
     { "PWM_RATEGROUP2",	VAR_UINT16, &cfg.pwm_group2_rate, 50, 498 },

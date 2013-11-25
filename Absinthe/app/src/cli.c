@@ -650,6 +650,8 @@ static void cliSensor(char *cmdline)
 	ftoa(cfg.acc_magnitude, buf);
 	printf("1G magnitude      = %s\r\n\r\n", buf);
 
+	printf("Mag data          = %d %d %d\r\n\r\n", mag_sensor_data[ROLL], mag_sensor_data[PITCH], mag_sensor_data[YAW]);
+
 	printf("Baro Temp         = %d.%d\r\n", alt_sensor.baroTemp / 10, abs(alt_sensor.baroTemp) % 10);
 	printf("Baro alt (cm)     = %d\r\n", alt_sensor.baroAlt);
 	printf("Baro alt ground   = %d\r\n", alt_sensor.baroAltGround);

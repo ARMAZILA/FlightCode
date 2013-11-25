@@ -46,7 +46,7 @@ static void ml_send_25Hz(mavlink_channel_t chan)
 	mavlink_msg_attitude_send(chan,
 		sysTickUptime,					// Timestamp (milliseconds since system boot)
 		angle_rad[ROLL ],				// Roll angle (rad, -pi..+pi)
-		angle_rad[PITCH],				// Pitch angle (rad, -pi..+pi)
+		-angle_rad[PITCH],				// Pitch angle (rad, -pi..+pi)
 		heading_rad,	 				// Yaw angle (rad, -pi..+pi)
 		gyro_sensor.data_rad[ROLL ], 	// Roll angular speed (rad/s)
 		gyro_sensor.data_rad[PITCH],	// Pitch angular speed (rad/s)
