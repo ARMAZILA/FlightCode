@@ -42,7 +42,7 @@
 #include "sbus.h"
 
 #define MW_VERSION  			211
-#define SW_VERSION				"1.3"
+#define SW_VERSION				"1.4"
 
 #define LAT  					0
 #define LON  					1
