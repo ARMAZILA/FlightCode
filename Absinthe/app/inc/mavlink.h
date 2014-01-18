@@ -53,6 +53,9 @@ static inline void comm_send_ch(mavlink_channel_t chan, uint8_t ch)
 	case MAVLINK_COMM_2:
     	vcpSendByte(1, ch); // VCP2
 		break;
+
+	case MAVLINK_COMM_3:
+		break;
 	}
 }
 

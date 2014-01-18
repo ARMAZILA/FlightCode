@@ -56,20 +56,6 @@ static void cliTest(char *cmdline);
 static void cliTele(char *cmdline);
 static void cliBeep(char *cmdline);
 
-// from sensors.c
-extern uint8_t	batteryCellCount;
-
-#if 0
-extern uint32_t	acc_sample_count;
-extern uint32_t	acc_overrun_count;
-extern int16_t	acc_temp;			// Acc sensor temperature
-extern float	acc_average[3];
-extern float	acc_variance[3];
-#endif
-
-// from config.c RC Channel mapping
-extern const char rcChannelLetters[];
-
 // buffer
 static char cliBuffer[48];
 static uint32_t bufferIndex = 0;
@@ -741,7 +727,7 @@ static void cliStatus(char *cmdline)
 	ds0 = *(__IO uint32_t*)(0x1FFFF7E8);
 	ds1 = *(__IO uint32_t*)(0x1FFFF7EC);
 	ds2 = *(__IO uint32_t*)(0x1FFFF7F0);
-	printf("MCU unique ID:     %X%X%X\r\n", ds0, ds1, ds2);
+	printf("MCU unique ID:     %08lX%08lX%08lX\r\n", ds0, ds1, ds2);
 
 	printf("Config size:       %d Byte\r\n", sizeof(config_t));
 	printf("Config version:    %u\r\n", cfg.version);

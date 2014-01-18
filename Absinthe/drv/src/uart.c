@@ -48,7 +48,7 @@ static const struct uart_cfg_s uart_cfg[3] =
 	},
 };
 
-#define UART_BUFFER_SIZE    128
+#define UART_BUFFER_SIZE    256
 
 // Receive buffer, circular
 volatile uint8_t 		txBuffer[3][UART_BUFFER_SIZE];
