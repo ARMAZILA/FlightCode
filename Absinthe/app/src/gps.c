@@ -425,7 +425,7 @@ static bool UBLOX_parse_gps(void)
         //i2c_dataset.time                = _buffer.posllh.time;
         gps.coord[LON] = _buffer.posllh.longitude;
         gps.coord[LAT] = _buffer.posllh.latitude;
-        gps.altitude = _buffer.posllh.altitude_msl / 10 / 100;  //alt in m
+        gps.altitude = _buffer.posllh.altitude_msl / 10;  // alt in cm
         if (next_fix)
         	flagSet(FLAG_GPS_FIX);
         else
@@ -447,7 +447,7 @@ static bool UBLOX_parse_gps(void)
         break;
     case MSG_VELNED:
         // speed_3d = _buffer.velned.speed_3d;  // cm/s
-        gps.speed = _buffer.velned.speed_2d;    // cm/s
+        gps.speed = _buffer.velned.speed_2d / 10;    // cm/s -> 0.1 m/s
         gps.ground_course = (uint16_t) (_buffer.velned.heading_2d / 10000);     // Heading 2D deg * 100000 rescaled to deg * 10
         _new_speed = true;
         break;

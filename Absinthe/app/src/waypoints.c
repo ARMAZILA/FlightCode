@@ -350,47 +350,49 @@ static void wp_mission_set_current(mavlink_channel_t chan, const mavlink_message
 	mavlink_msg_statustext_send(chan, MAV_SEVERITY_INFO, buf);
 }
 
-void wp_message_handler(mavlink_channel_t chan, const mavlink_message_t *msg)
+bool wp_message_handler(mavlink_channel_t chan, const mavlink_message_t *msg)
 {
+	bool done = false;
+
 	switch (msg->msgid)
 	{
 	case MAVLINK_MSG_ID_MISSION_REQUEST_LIST:
 		wp_mission_request_list(chan, msg);
+		done = true;
 		break;
 
 	case MAVLINK_MSG_ID_MISSION_REQUEST:
 		wp_mission_request(chan, msg);
+		done = true;
 		break;
 
 	case MAVLINK_MSG_ID_MISSION_ACK:
 		wp_mission_ack(chan, msg);
+		done = true;
 		break;
 
 	case MAVLINK_MSG_ID_MISSION_COUNT:
 		wp_mission_count(chan, msg);
+		done = true;
 		break;
 
 	case MAVLINK_MSG_ID_MISSION_ITEM:
 		wp_mission_item(chan, msg);
+		done = true;
 		break;
 
 	case MAVLINK_MSG_ID_MISSION_CLEAR_ALL:
 		wp_mission_clear_all(chan, msg);
+		done = true;
 		break;
 
 	case MAVLINK_MSG_ID_MISSION_SET_CURRENT:
 		wp_mission_set_current(chan, msg);
+		done = true;
 		break;
-
-	default:
-	{
-//		char buf[50];
-//		sprintf(buf, "Waypoint: Unknown message type received (%u)", msg->msgid);
-//		mavlink_msg_statustext_send(chan, MAV_SEVERITY_INFO, buf);
-	}
-	break;
-
 	} // switch (msg->msgid)
+
+	return done;
 }
 
 void wpInit(void)

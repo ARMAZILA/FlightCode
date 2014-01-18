@@ -396,6 +396,7 @@ static void baroSensorUpdate(void)
 	lps331apRead(&pressure, &temperature);
     From_Pressure_mb_To_Altitude_cm(&pressure, &altitude);
 
+    alt_sensor.baroPressure_mb = pressure;
 	alt_sensor.baroAlt = altitude;
 	alt_sensor.baroTemp = temperature * 10;
 }

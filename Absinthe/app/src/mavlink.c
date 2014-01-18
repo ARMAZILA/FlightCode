@@ -22,10 +22,10 @@ serialHasData_t		mlHasData = NULL;
 // waypoints.c
 void wpInit(void);
 void wp_message_timeout(void);
-void wp_message_handler(mavlink_channel_t chan, const mavlink_message_t *msg);
+bool wp_message_handler(mavlink_channel_t chan, const mavlink_message_t *msg);
 
 // mission.c
-void mp_message_handler(mavlink_channel_t chan, mavlink_message_t* msg);
+bool mp_message_handler(mavlink_channel_t chan, mavlink_message_t* msg);
 
 #include "fifo_buffer.h"
 
@@ -43,43 +43,23 @@ static uint16_t mlHasData_vcp2(void)		{ return vcpHasData(1); }
 
 static void ml_send_25Hz(mavlink_channel_t chan)
 {
-	mavlink_msg_attitude_send(chan,
-		sysTickUptime,					// Timestamp (milliseconds since system boot)
-		imu.rpy_rad[ROLL ],				// Roll angle (rad, -pi..+pi)
-		-imu.rpy_rad[PITCH],				// Pitch angle (rad, -pi..+pi)
-		imu.rpy_rad[YAW],	 				// Yaw angle (rad, -pi..+pi)
-		gyro_sensor.data_rad[ROLL ], 	// Roll angular speed (rad/s)
-		gyro_sensor.data_rad[PITCH],	// Pitch angular speed (rad/s)
-		gyro_sensor.data_rad[YAW  ]		// Yaw angular speed (rad/s)
-	);
-
-	if (cfg.mavlink_telemetry_flag & ML_TELEMETRY_SERVO_OUTPUT_RAW)
-	{
-		mavlink_msg_servo_output_raw_send(chan,
-			sysTickUptime,		// Timestamp (milliseconds since system boot)
-			1,					// Servo output port
-			motor[0], motor[1], motor[2], motor[3], motor[4], motor[5], motor[6], motor[7]);
-	}
-/*
-	mavlink_msg_servo_output_raw_send(chan,
-			sysTickUptime,						// Timestamp (milliseconds since system boot)
-			2, servo[0], servo[1], servo[2], servo[3], servo[4], servo[5], servo[6], servo[7]);
-*/
+	if (m_parameter_i < valueTableCount)			// Sending parameters in progress
+		return;
 
 	if (cfg.mavlink_telemetry_flag & ML_TELEMETRY_SCALED_IMU)
 	{
 		mavlink_msg_scaled_imu_send(
 			chan,
-			sysTickUptime,						// Timestamp (milliseconds since system boot)
-			acc_sensor.data_mss[0] / 9806.65,	// Acceleration (mg)
-			acc_sensor.data_mss[1] / 9806.65,
-			acc_sensor.data_mss[2] / 9806.65,
-			gyro_sensor.data_rad[0] * 1000.0,	// Angular speed around X axis (millirad /sec)
-			gyro_sensor.data_rad[1] * 1000.0,
-			gyro_sensor.data_rad[2] * 1000.0,
-			mag_sensor_data[0],					// Magnetic field (milli tesla)
-			mag_sensor_data[1],
-			mag_sensor_data[2]
+			sysTickUptime,							// Timestamp (milliseconds since system boot)
+			acc_sensor.data_mss[ROLL ] * 101.9716,	// Acceleration (mg)
+			acc_sensor.data_mss[PITCH] * 101.9716,
+			acc_sensor.data_mss[YAW  ] * 101.9716,
+			gyro_sensor.data_rad[ROLL ] * 1000.0,	// Angular speed around X axis (millirad /sec)
+			gyro_sensor.data_rad[PITCH] * 1000.0,
+			gyro_sensor.data_rad[YAW  ] * 1000.0,
+			mag_sensor_data[ROLL ],					// Magnetic field (milli tesla)
+			mag_sensor_data[PITCH],
+			mag_sensor_data[YAW  ]
 		);
 	}
 
@@ -96,62 +76,69 @@ static void ml_send_25Hz(mavlink_channel_t chan)
 
 static void ml_send_10Hz(mavlink_channel_t chan)
 {
-	/*
-	mavlink_msg_named_value_float_send(chan,
-			sysTickUptime,		// Timestamp (milliseconds since system boot)
-			"DEBUG_ALT",
-			EstAlt
-			);
-	*/
+	if (m_parameter_i < valueTableCount)			// Sending parameters in progress
+		return;
 
-	mavlink_msg_rc_channels_raw_send(chan,
-			sysTickUptime,		// Timestamp (milliseconds since system boot)
-			0,					// Servo output port
-			rcData[0],			// RC channel 1 value, in microseconds
-			rcData[1],
-			rcData[2],
-			rcData[3],
-			rcData[4],
-			rcData[5],
-			rcData[6],
-			rcData[7],
+	if (cfg.mavlink_telemetry_flag & ML_TELEMETRY_NAMED_VALUE)
+	{
+//		mavlink_msg_named_value_int_send(chan, sysTickUptime, "BARO_PID", BaroPID);
+//		mavlink_msg_named_value_float_send(chan, sysTickUptime,	"RCRATE", rcRate);
+	}
+
+	if (cfg.mavlink_telemetry_flag & ML_TELEMETRY_RC_CHANNELS_RAW)
+	{
+		mavlink_msg_rc_channels_raw_send(chan, sysTickUptime, 0,
+			// RC channel value, in microseconds
+			rcData[0], rcData[1], rcData[2], rcData[3], rcData[4], rcData[5], rcData[6], rcData[7],
 			rssi				// RSSI
-	);
+		);
+	}
+
+	if (cfg.mavlink_telemetry_flag & ML_TELEMETRY_SERVO_OUTPUT_RAW)
+	{
 /*
-	mavlink_msg_rc_channels_scaled_send(chan,
-			sysTickUptime,				// Timestamp (milliseconds since system boot)
-			0,							// Servo output port
-			(1500 - rcData[0]) * 20,	// RC channel 1 value scaled, (-100%) -10000, (0%) 0, (100%) 10000
-			(1500 - rcData[1]) * 20,
-			(1500 - rcData[2]) * 20,
-			(1500 - rcData[3]) * 20,
-			(1500 - rcData[4]) * 20,
-			(1500 - rcData[5]) * 20,
-			(1500 - rcData[6]) * 20,
-			(1500 - rcData[7]) * 20,
-			0							// RSSI
-	);
+		mavlink_msg_servo_output_raw_send(chan,	sysTickUptime, 1,
+			motor[0], motor[1], motor[2], motor[3], motor[4], motor[5], motor[6], motor[7]);
 */
-	int16_t vfr_heading = imu.rpy[YAW];
+		mavlink_msg_servo_output_raw_send(chan, sysTickUptime, 2,
+			servo[0], servo[1], servo[2], servo[3], servo[4], servo[5], servo[6], servo[7]);
+	}
 
-    // Align to the value 0...360
-    if (vfr_heading < 0)
-    	vfr_heading = vfr_heading + 360;
+	if (cfg.mavlink_telemetry_flag & ML_TELEMETRY_HUD)
+	{
+		mavlink_msg_attitude_send(chan,
+			sysTickUptime,					// Timestamp (milliseconds since system boot)
+			imu.rpy_rad[ROLL ],				// Roll angle (rad, -pi..+pi)
+			-imu.rpy_rad[PITCH],			// Pitch angle (rad, -pi..+pi)
+			imu.rpy_rad[YAW],	 			// Yaw angle (rad, -pi..+pi)
+			gyro_sensor.data_rad[ROLL ], 	// Roll angular speed (rad/s)
+			gyro_sensor.data_rad[PITCH],	// Pitch angular speed (rad/s)
+			gyro_sensor.data_rad[YAW  ]		// Yaw angular speed (rad/s)
+		);
 
-	mavlink_msg_vfr_hud_send(chan,
-			gps.speed / 10,						// Current airspeed in m/s
-			gps.speed / 10,						// Current ground speed in m/s
-			vfr_heading,						// Current heading in degrees, in compass units (0..360, 0=north)
-			(rcCommand[THROTTLE] - 1000) / 10,	// Current throttle setting in integer percent, 0 to 100
-			EstAlt / 100,						// Current altitude (MSL), in meters
-			vario / 100							// Current climb rate in meters/second
-	);
+		int16_t vfr_heading = imu.rpy[YAW];
+
+		// Align to the value 0...360
+		if (vfr_heading < 0)
+			vfr_heading = vfr_heading + 360;
+
+		mavlink_msg_vfr_hud_send(chan,
+			gps.speed / 10,					// Current airspeed in m/s
+			gps.speed / 10,					// Current ground speed in m/s
+			vfr_heading,					// Current heading in degrees, in compass units (0..360, 0=north)
+			(rcCommand[THROTTLE] - cfg.minthrottle) / 10,	// Current throttle setting in integer percent, 0 to 100
+			EstAlt / 100,					// Current altitude (MSL), in meters
+			vario / 100						// Current climb rate in meters/second
+		);
+	}
 }
 
 static void ml_send_1Hz(mavlink_channel_t chan)
 {
 	// Pack the message
-	mavlink_msg_heartbeat_send(chan, mavlink_system.type,
+	mavlink_msg_heartbeat_send(
+		chan,
+		mavlink_system.type,
 		MAV_AUTOPILOT_ARMAZILA,
 		system_mode,
 		custom_mode,
@@ -217,19 +204,22 @@ static void ml_send_1Hz(mavlink_channel_t chan)
 		0							// Autopilot-specific errors
 	);
 
-//	GPS_RAW_INT (#24)
-	mavlink_msg_gps_raw_int_send(chan,
-		(uint64_t) micros(),
-		3,						// fix_type
-		gps.coord[LAT],			// Latitude in 1E7 degrees
-		gps.coord[LON],			// Longitude in 1E7 degrees
-		gps.altitude * 100,		// Altitude in 1E3 meters (millimeters) above MSL
-		gps.hdop,				// HDOP in cm (m*100). If unknown, set to: 65535
-		65535,					// VDOP in cm (m*100). If unknown, set to: 65535
-		gps.speed,				// GPS ground speed (m/s * 100). If unknown, set to: 65535
-		gps.ground_course * 10,	// Course over ground in degrees * 100, 0.0..359.99 degrees. If unknown, set to: 65535
-		gps.numSat				// satellites_visible
-	);
+	if (cfg.mavlink_telemetry_flag & ML_TELEMETRY_GPS)
+	{
+		//	GPS_RAW_INT (#24)
+		mavlink_msg_gps_raw_int_send(chan,
+			(uint64_t) micros(),
+			3,						// fix_type
+			gps.coord[LAT],			// Latitude in 1E7 degrees
+			gps.coord[LON],			// Longitude in 1E7 degrees
+			gps.altitude * 10,		// Altitude in 1E3 meters (millimeters) above MSL
+			gps.hdop,				// HDOP in cm (m*100). If unknown, set to: 65535
+			65535,					// VDOP in cm (m*100). If unknown, set to: 65535
+			gps.speed * 10,			// GPS ground speed (m/s * 100). If unknown, set to: 65535
+			gps.ground_course * 10,	// Course over ground in degrees * 100, 0.0..359.99 degrees. If unknown, set to: 65535
+			gps.numSat				// satellites_visible
+		);
+	}
 }
 
 static float paramGet(const param_value_t *var)
@@ -427,10 +417,13 @@ static void ml_set_mode(mavlink_channel_t chan, const mavlink_message_t *msg)
 *
 * This function decodes packets on the protocol level and also handles
 * their value by calling the appropriate functions.
+*
+* return TRUE if message parsed
 */
-static void ml_message_handler(mavlink_channel_t chan, mavlink_message_t* msg)
+static bool ml_message_handler(mavlink_channel_t chan, mavlink_message_t* msg)
 {
 	char buf[50];
+	char param[16];
 
 	// Handle message
 	switch (msg->msgid)
@@ -438,7 +431,7 @@ static void ml_message_handler(mavlink_channel_t chan, mavlink_message_t* msg)
 	case MAVLINK_MSG_ID_PARAM_REQUEST_LIST:
 		// Start sending parameters
 		m_parameter_i = 0;
-		break;
+		return true;
 
 	case MAVLINK_MSG_ID_HEARTBEAT:
 		// E.g. read GCS heartbeat and go into
@@ -447,21 +440,24 @@ static void ml_message_handler(mavlink_channel_t chan, mavlink_message_t* msg)
 
 	case MAVLINK_MSG_ID_PARAM_SET:
 		ml_param_set(chan, msg);
-		break;
+		return true;
 
 	case MAVLINK_MSG_ID_COMMAND_LONG:
 		ml_command_long(chan, msg);
-		break;
+		return true;
 
 	case MAVLINK_MSG_ID_SET_MODE:
 		ml_set_mode(chan, msg);
-		break;
+		return true;
 
-	default:
-		sprintf(buf, "MAVLink: Unknown message type received (%u)", msg->msgid);
+	case MAVLINK_MSG_ID_PARAM_REQUEST_READ:
+		mavlink_msg_param_request_read_get_param_id(msg, param);
+		sprintf(buf, "Mavlink: PARAM_REQUEST_READ (%s)", param);
 		mavlink_msg_statustext_send(chan, MAV_SEVERITY_INFO, buf);
-		break;
+		return true;
 	}
+
+	return false;
 }
 
 /**
@@ -506,6 +502,8 @@ static void ml_queued_send(mavlink_channel_t chan)
 		m_parameter_i++;
 	}
 }
+
+
 
 /*
  * 	MAVLink protocol task
@@ -558,9 +556,17 @@ portTASK_FUNCTION_PROTO(mavlinkTask, pvParameters)
 
     		if (mavlink_parse_char(chan, c, &msg, &status))
     		{
-    			ml_message_handler(chan, &msg);  	// Process parameter protocol
-    			mp_message_handler(chan, &msg);  	// Process mission planner command
-    			wp_message_handler(chan, &msg);		// Process waypoint protocol
+    			bool parsed = ml_message_handler(chan, &msg);		// Process parameter protocol
+    			if (!parsed)
+    				parsed = mp_message_handler(chan, &msg);  		// Process mission planner command
+    			if (!parsed)
+    				parsed = wp_message_handler(chan, &msg);		// Process waypoint protocol
+    			if (!parsed)
+    			{
+    				char buf[50];
+    				sprintf(buf, "MAVLink: Unknown message type received (%u)", msg.msgid);
+    				mavlink_msg_statustext_send(chan, MAV_SEVERITY_INFO, buf);
+    			}
     		}
 
     		// Update global packet drops counter
@@ -571,12 +577,12 @@ portTASK_FUNCTION_PROTO(mavlinkTask, pvParameters)
 		{
 			CycleCount25Hz = 0;
 			ml_send_25Hz(chan);					// Send paket at 25 Hz
+	    	ml_queued_send(chan);				// Send parameters at 25 Hz, if previously requested
 		}
 
     	if (++CycleCount10Hz == 10)
 		{
 			CycleCount10Hz = 0;
-	    	ml_queued_send(chan);				// Send parameters at 10 Hz, if previously requested
 			ml_send_10Hz(chan);					// Send paket at 10 Hz
 		}
 

@@ -169,7 +169,7 @@ const param_value_t valueTable[] = {
 uint8_t valueTableCount = (sizeof(valueTable) / sizeof(valueTable[0]));
 
 config_t cfg;
-const uint8_t FLASH_CONFIG_VERSION = 41;
+const uint8_t FLASH_CONFIG_VERSION = 46;
 static uint32_t enabledSensors = 0;
 static uint32_t flagRegistor = 0;
 
@@ -475,7 +475,7 @@ static void resetFlashConfig(void)
 
     cfg.mavlink_sysid			= 20;
     cfg.mavlink_compid			= 200;
-    cfg.mavlink_telemetry_flag	= 3;
+    cfg.mavlink_telemetry_flag	= ML_TELEMETRY_HUD | ML_TELEMETRY_GPS | ML_TELEMETRY_RC_CHANNELS_RAW | ML_TELEMETRY_SERVO_OUTPUT_RAW;
 
     // custom mixer. clear by defaults.
     for (i = 0; i < MAX_MOTORS; i++)

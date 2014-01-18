@@ -87,17 +87,16 @@ void check_waypoints_reached(void)
 	}
 }
 
-void mp_message_handler(mavlink_channel_t chan, mavlink_message_t* msg)
+bool mp_message_handler(mavlink_channel_t chan, mavlink_message_t* msg)
 {
-	char buf[50];
-
 	// Handle message
 	switch (msg->msgid)
 	{
 
 	default:
-//		sprintf(buf, "Mission: Unknown message type received (%u)", msg->msgid);
-//		mavlink_msg_statustext_send(chan, MAV_SEVERITY_INFO, buf);
+
 		break;
 	} // switch (msg->msgid)
+
+	return false;
 }

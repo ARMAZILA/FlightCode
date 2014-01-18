@@ -224,6 +224,10 @@ typedef enum {
 typedef enum {
 	ML_TELEMETRY_SERVO_OUTPUT_RAW	= 1 << 0,
 	ML_TELEMETRY_SCALED_IMU			= 1 << 1,
+	ML_TELEMETRY_RC_CHANNELS_RAW	= 1 << 2,
+	ML_TELEMETRY_NAMED_VALUE		= 1 << 3,
+	ML_TELEMETRY_HUD				= 1 << 4,
+	ML_TELEMETRY_GPS				= 1 << 5,
 } ml_telemetry_flag_t;
 
 /* Param table */
@@ -437,7 +441,7 @@ typedef struct gps_sensor_t {
 	uint8_t 	numSat;
 	uint16_t 	distanceToHome; 				// distance to home point in meters
 	int16_t 	directionToHome; 				// direction to home or hol point in degrees 0..360
-	uint16_t 	altitude;						// altitude in 0.1m
+	uint16_t 	altitude;						// altitude in cm
 	uint16_t 	speed; 							// speed in 0.1m/s
 	uint8_t 	update; 						// it's a binary toogle to distinct a GPS position update
 	int16_t 	angle[2]; 						// it's the angles that must be applied for GPS correction
@@ -457,6 +461,7 @@ typedef struct power_sensor_t {
 } power_sensor_t;
 
 typedef struct alt_sensor_t {
+	float		baroPressure_mb;				// Temperature-compensated Pressure measurement in mb
 	int32_t 	baroAlt;  						// in cm. Altitude from barometr
 	int32_t 	baroAltGround;					// in cm.
 	int16_t 	baroTemp;						// baro sensor temperature in 0.1 degrees
