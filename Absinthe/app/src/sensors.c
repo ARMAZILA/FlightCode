@@ -445,12 +445,15 @@ portTASK_FUNCTION_PROTO(sensorTask, pvParameters)
 			// Read accel sensor data each cycle
 			accSensorUpdate();
 
-			// Baromert update rate 50 ms
-			if (++baroSensorCycleCount == 5)
+			if (sensors(SENSOR_BARO))
 			{
-				baroSensorCycleCount = 0;
-				baroSensorUpdate();
-				getEstimatedAltitude();
+				// Baromert update rate 50 ms
+				if (++baroSensorCycleCount == 5)
+				{
+					baroSensorCycleCount = 0;
+					baroSensorUpdate();
+					getEstimatedAltitude();
+				}
 			}
 
 			// Magnitometer update rate 40 ms
