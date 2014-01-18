@@ -443,7 +443,7 @@ typedef struct gps_sensor_t {
 
 typedef struct power_sensor_t {
 	uint8_t 	flightBatteryVoltage;  			// flight battery voltage in 0.1V steps
-	int16_t 	flightBatteryCurrent; 			// flight battery current in 1mA steps. + discharge / - charge
+	int16_t 	flightBatteryCurrent; 			// flight battery current in 10mA steps. + discharge / - charge
 	uint16_t 	flightBatteryConsumed; 			// flight battery consumed energy in 1mAh steps
 	uint16_t 	flightBatteryWarningVoltage;
 	uint8_t 	flightBatteryCellCount;

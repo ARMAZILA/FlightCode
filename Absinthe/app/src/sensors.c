@@ -552,9 +552,9 @@ portTASK_FUNCTION_PROTO(powerSensorTask, pvParameters)
 
 	    // calculate battery current based on ADC reading
 	    // result is Ibatt in 1 mA steps. 3.3V = ADC Vref, 4095 = 12bit adc, 2:1 voltage divider
-		power_sensor.flightBatteryCurrent = ((ibatTmp * 3.3f) / 4095) * cfg.batiscale - cfg.batioffset;	// Battery current in mA
+		power_sensor.flightBatteryCurrent = ((ibatTmp * 3.3f) / 4095) * 20 * cfg.batiscale - cfg.batioffset;	// Battery current in mA
 
-		ebatTmp += power_sensor.flightBatteryCurrent / 36000.0f;
+		ebatTmp += power_sensor.flightBatteryCurrent / 3600.0f;
 		power_sensor.flightBatteryConsumed = ebatTmp;						// Battery consumed energy in mAh
 
 		// Wait for the next cycle.

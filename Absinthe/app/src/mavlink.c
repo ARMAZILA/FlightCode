@@ -129,7 +129,9 @@ static void ml_send_1Hz(mavlink_channel_t chan)
 		system_state
 	);
 
-#define FLY_BATTERY_REMAINING	(cfg.flightBatteryCapacity - power_sensor.flightBatteryConsumed) / cfg.flightBatteryCapacity * 100
+#define FLY_BATTERY_REMAINING	\
+	(((int32_t) cfg.flightBatteryCapacity - (int32_t) power_sensor.flightBatteryConsumed) * \
+	100 / (int32_t) cfg.flightBatteryCapacity)
 
 	mavlink_msg_sys_status_send(chan,
 /* Value of 1: present. Indices:
@@ -176,7 +178,7 @@ static void ml_send_1Hz(mavlink_channel_t chan)
 
    		counters.cycleTime / 10,	// Maximum usage in percent of the mainloop time, (0%: 0, 100%: 1000)
 		power_sensor.flightBatteryVoltage * 100,	// Battery voltage, in millivolts (1 = 1 millivolt)
-		power_sensor.flightBatteryCurrent / 10,	// Battery current, in 10*milliamperes (1 = 10 milliampere)
+		power_sensor.flightBatteryCurrent,			// Battery current, in 10*milliamperes (1 = 10 milliampere)
 		FLY_BATTERY_REMAINING, 		// Remaining battery energy: (0%: 0, 100%: 100)
 		0,							// Communication drops in percent, (0%: 0, 100%: 10'000)
 		packet_drops,				// Communication errors

@@ -55,7 +55,7 @@ const param_value_t valueTable[] = {
     { "BAT_VSCALE",		VAR_UINT8, 	&cfg.batvscale, 10, 200 },
     { "BAT_MaxCellV",	VAR_UINT8, 	&cfg.batmaxcellvoltage, 10, 50 },
     { "BAT_MinCellV",	VAR_UINT8, 	&cfg.batmincellvoltage, 10, 50 },
-    { "BAT_ISCALE",		VAR_UINT8, 	&cfg.batiscale, 10, 200 },
+    { "BAT_ISCALE",		VAR_UINT8, 	&cfg.batiscale, 10, 250 },
     { "BAT_IOFFSET",	VAR_INT16, 	&cfg.batioffset, -10000, 10000 },
     { "BAT_CAPACITY",	VAR_UINT16,	&cfg.flightBatteryCapacity, 1, 10000 },
     { "BAT_ALARM",		VAR_UINT8,	&cfg.batalarm, 0, 1 },
@@ -387,7 +387,7 @@ static void resetFlashConfig(void)
     cfg.batvscale 				= 60;
     cfg.batmaxcellvoltage 		= 43;
     cfg.batmincellvoltage 		= 33;
-    cfg.batiscale 				= 2;
+    cfg.batiscale 				= 159;		// Adapted for Armazila APS-45/90 Power Sensor (90A)
     //cfg.ibatoffset 				= 0;
     //cfg.batalarm				= 0;		// Battery warning disable
     cfg.flightBatteryCapacity	= 5000;
