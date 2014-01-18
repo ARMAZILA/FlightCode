@@ -45,24 +45,53 @@ static void ml_send_25Hz(mavlink_channel_t chan)
 {
 	mavlink_msg_attitude_send(chan,
 		sysTickUptime,					// Timestamp (milliseconds since system boot)
-		angle_rad[ROLL ],				// Roll angle (rad, -pi..+pi)
-		-angle_rad[PITCH],				// Pitch angle (rad, -pi..+pi)
-		heading_rad,	 				// Yaw angle (rad, -pi..+pi)
+		imu.rpy_rad[ROLL ],				// Roll angle (rad, -pi..+pi)
+		-imu.rpy_rad[PITCH],				// Pitch angle (rad, -pi..+pi)
+		imu.rpy_rad[YAW],	 				// Yaw angle (rad, -pi..+pi)
 		gyro_sensor.data_rad[ROLL ], 	// Roll angular speed (rad/s)
 		gyro_sensor.data_rad[PITCH],	// Pitch angular speed (rad/s)
 		gyro_sensor.data_rad[YAW  ]		// Yaw angular speed (rad/s)
 	);
 
-	mavlink_msg_servo_output_raw_send(chan,
+	if (cfg.mavlink_telemetry_flag & ML_TELEMETRY_SERVO_OUTPUT_RAW)
+	{
+		mavlink_msg_servo_output_raw_send(chan,
 			sysTickUptime,		// Timestamp (milliseconds since system boot)
 			1,					// Servo output port
 			motor[0], motor[1], motor[2], motor[3], motor[4], motor[5], motor[6], motor[7]);
+	}
 /*
 	mavlink_msg_servo_output_raw_send(chan,
 			sysTickUptime,						// Timestamp (milliseconds since system boot)
 			2, servo[0], servo[1], servo[2], servo[3], servo[4], servo[5], servo[6], servo[7]);
 */
 
+	if (cfg.mavlink_telemetry_flag & ML_TELEMETRY_SCALED_IMU)
+	{
+		mavlink_msg_scaled_imu_send(
+			chan,
+			sysTickUptime,						// Timestamp (milliseconds since system boot)
+			acc_sensor.data_mss[0] / 9806.65,	// Acceleration (mg)
+			acc_sensor.data_mss[1] / 9806.65,
+			acc_sensor.data_mss[2] / 9806.65,
+			gyro_sensor.data_rad[0] * 1000.0,	// Angular speed around X axis (millirad /sec)
+			gyro_sensor.data_rad[1] * 1000.0,
+			gyro_sensor.data_rad[2] * 1000.0,
+			mag_sensor_data[0],					// Magnetic field (milli tesla)
+			mag_sensor_data[1],
+			mag_sensor_data[2]
+		);
+	}
+
+#if 0
+	mavlink_msg_scaled_pressure_send(
+			chan,
+			sysTickUptime,		// Timestamp (milliseconds since system boot)
+			press_abs,			// float	Absolute pressure (hectopascal)
+			press_diff,			// float	Differential pressure 1 (hectopascal)
+			temperature			// int16_t	Temperature measurement (0.01 degrees celsius)
+	);
+#endif
 }
 
 static void ml_send_10Hz(mavlink_channel_t chan)
@@ -103,7 +132,7 @@ static void ml_send_10Hz(mavlink_channel_t chan)
 			0							// RSSI
 	);
 */
-	int16_t vfr_heading = heading;
+	int16_t vfr_heading = imu.rpy[YAW];
 
     // Align to the value 0...360
     if (vfr_heading < 0)

@@ -147,7 +147,7 @@ static void sendVoltage(void)
 static void sendHeading(void)
 {
     sendDataHead(ID_COURSE_BP);
-    serialize16(heading);
+    serialize16(imu.rpy[YAW]);
     sendDataHead(ID_COURSE_AP);
     serialize16(0);
 }

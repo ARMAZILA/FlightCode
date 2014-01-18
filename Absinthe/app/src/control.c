@@ -76,7 +76,7 @@ void computeRC(void)
 static void armingCallback(xTimerHandle pxTimer)
 {
 	flagSet(FLAG_ARMED);
-	headFreeModeHold = heading;
+	headFreeModeHold = imu.rpy[YAW];
 	signalLED(LED_STS, LEDMODE_ON);
 }
 
@@ -355,7 +355,7 @@ void loop(void)
 			if (!flag(FLAG_MAG_MODE))
 			{
 				flagSet(FLAG_MAG_MODE);
-				magHold = heading;
+				magHold = imu.rpy[YAW];
 			}
 		}
 		else
@@ -375,7 +375,7 @@ void loop(void)
 		}
 		if (rcOptions[BOXHEADADJ])
 		{
-			headFreeModeHold = heading; // acquire new heading
+			headFreeModeHold = imu.rpy[YAW]; // acquire new heading
 		}
 	}
 
@@ -504,7 +504,7 @@ void loop(void)
 
 	if (flag(FLAG_HEADFREE_MODE))
 	{
-		float radDiff = DEG2RAD(heading - headFreeModeHold);
+		float radDiff = DEG2RAD(imu.rpy[YAW] - headFreeModeHold);
 		float cosDiff = cosf(radDiff);
 		float sinDiff = sinf(radDiff);
 		int16_t rcCommand_PITCH = rcCommand[PITCH] * cosDiff + rcCommand[ROLL] * sinDiff;
@@ -566,7 +566,7 @@ void loop(void)
 	{
 		if (abs(rcCommand[YAW]) < 70 && flag(FLAG_MAG_MODE))
 		{
-			int16_t dif = heading - magHold;
+			int16_t dif = imu.rpy[YAW] - magHold;
 			if (dif <= -180)
 				dif += 360;
 			if (dif >= +180)
@@ -575,7 +575,7 @@ void loop(void)
 				rcCommand[YAW] -= dif * cfg.P8[PIDMAG] / 30; // 18 deg
 		}
 		else
-			magHold = heading;
+			magHold = imu.rpy[YAW];
 	}
 
 	if (sensors(SENSOR_BARO))
@@ -600,8 +600,8 @@ void loop(void)
 		}
 		else
 		{
-			float sin_yaw_y = sinf(heading_rad);
-			float cos_yaw_x = cosf(heading_rad);
+			float sin_yaw_y = sinf(imu.rpy_rad[YAW]);
+			float cos_yaw_x = cosf(imu.rpy_rad[YAW]);
 			if (cfg.nav_slew_rate)
 			{
 				nav_rated[LON] += constrain(wrap_18000(nav[LON] - nav_rated[LON]), -cfg.nav_slew_rate, cfg.nav_slew_rate); // TODO check this on uint8
@@ -654,7 +654,7 @@ void stabilize(float dT)
 		if ((flag(FLAG_ANGLE_MODE) || flag(FLAG_HORIZON_MODE)) && axis < 2)	// MODE relying on ACC
 		{
 		  // 50 degrees max inclination
-			errorAngle = constrain(2 * rcCommand[axis] + gps.angle[axis], -500, +500) - angle[axis] + cfg.angleTrim[axis];
+			errorAngle = constrain(2 * rcCommand[axis] + gps.angle[axis], -500, +500) - imu.rpy[axis] + cfg.angleTrim[axis];
 			PTermACC = errorAngle * cfg.P8[PIDLEVEL] / 100.0f;
 			PTermACC = constrain(PTermACC, -cfg.D8[PIDLEVEL] * 5, +cfg.D8[PIDLEVEL] * 5);
 			errorAngleI[axis] = constrain(errorAngleI[axis] + errorAngle, -10000, +10000); // WindUp

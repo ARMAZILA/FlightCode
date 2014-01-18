@@ -304,8 +304,8 @@ static void evaluateCommand(uint8_t port)
     case MSP_ATTITUDE:
         headSerialReply(port, 8);
         for (i = 0; i < 2; i++)
-            serialize16(port, angle[i]);
-        serialize16(port, heading);
+            serialize16(port, imu.rpy[i]);
+        serialize16(port, imu.rpy[YAW]);
         serialize16(port, headFreeModeHold);
         break;
     case MSP_ALTITUDE:

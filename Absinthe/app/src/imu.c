@@ -20,12 +20,9 @@ int32_t	accSumCount = 0;
 // **************
 float   gyroData[3]  = { 0, 0, 0 };		// The angles of the gyroscope
 float   accSmooth[3] = { 0, 0, 0 };		// The values of the accelerometr
-int16_t angle[2] 	 = { 0, 0 };    	// Absolute angle inclination in multiple of 0.1 degree. ROLL: -1800...1800, PITCH -900..900.
-float	angle_rad[2] = { 0.0f, 0.0f };
-int16_t heading		 = 0;				// Magnetic cousre -180...+180 degrees
-float	heading_rad	 = 0;
 int32_t EstAlt;             			// Altitude in cm
 int32_t vario = 0;                      // variometer in cm/s
+imu_t	imu;
 
 typedef struct fp_vector {
     float X;
@@ -207,9 +204,9 @@ void acc_calc(uint32_t deltaT)
     t_fp_vector accel_ned;
 
     // the accel values have to be rotated into the earth frame
-    rpy[0] = -angle_rad[ROLL];
-    rpy[1] = -angle_rad[PITCH];
-    rpy[2] = -heading_rad;
+    rpy[0] = -imu.rpy_rad[ROLL];
+    rpy[1] = -imu.rpy_rad[PITCH];
+    rpy[2] = -imu.rpy_rad[YAW];
 
     accel_ned.V.X = accSmooth[0];
     accel_ned.V.Y = accSmooth[1];
@@ -305,10 +302,10 @@ static void getEstimatedAttitude(void)
     invG = InvSqrt(sqGX_sqGZ + sqGY);
 
     taskENTER_CRITICAL();
-    angle_rad[ROLL ] = atan2f(EstG.V.X, EstG.V.Z);
-    angle_rad[PITCH] = atan2f(EstG.V.Y, invmagXZ * sqGX_sqGZ);
-    angle[ROLL ] = RAD2DEG(angle_rad[ROLL ]) * 10.0f;
-    angle[PITCH] = RAD2DEG(angle_rad[PITCH]) * 10.0f;
+    imu.rpy_rad[ROLL ] = atan2f(EstG.V.X, EstG.V.Z);
+    imu.rpy_rad[PITCH] = atan2f(EstG.V.Y, invmagXZ * sqGX_sqGZ);
+    imu.rpy[ROLL ] = RAD2DEG(imu.rpy_rad[ROLL ]) * 10.0f;
+    imu.rpy[PITCH] = RAD2DEG(imu.rpy_rad[PITCH]) * 10.0f;
     taskEXIT_CRITICAL();
 
     if (sensors(SENSOR_MAG)) {
@@ -316,8 +313,8 @@ static void getEstimatedAttitude(void)
 			EstM.A[axis] = (EstM.A[axis] * GYR_CMPFM_FACTOR + mag_sensor_data[axis]) * INV_GYR_CMPFM_FACTOR;
 
 		// Heading calculation
-        float rRAD = angle_rad[ROLL];
-        float pRAD = -angle_rad[PITCH];
+        float rRAD = imu.rpy_rad[ROLL];
+        float pRAD = -imu.rpy_rad[PITCH];
         float cr = cosf(rRAD);
         float sr = sinf(rRAD);
         float cp = cosf(pRAD);
@@ -326,14 +323,14 @@ static void getEstimatedAttitude(void)
         float Yh = EstM.V.X * cr - EstM.V.Z * sr;
 
         taskENTER_CRITICAL();
-        heading_rad = atan2f(-Yh, Xh) + magneticDeclination; 	// Add Magnetic Declination to the course
-        heading = RAD2DEG(heading_rad);
+        imu.rpy_rad[YAW] = atan2f(-Yh, Xh) + magneticDeclination; 	// Add Magnetic Declination to the course
+        imu.rpy[YAW] = RAD2DEG(imu.rpy_rad[YAW]);
 
         // Align to the value -180...180
-        if (heading > 180)
-            heading = heading - 360;
-        else if (heading < -180)
-            heading = heading + 360;
+        if (imu.rpy[YAW] > 180)
+            imu.rpy[YAW] = imu.rpy[YAW] - 360;
+        else if (imu.rpy[YAW] < -180)
+            imu.rpy[YAW] = imu.rpy[YAW] + 360;
         taskEXIT_CRITICAL();
     }
 
@@ -392,19 +389,19 @@ void imuAHRSupdate()
     Quaternion2RPY(q, rpy);
 
     taskENTER_CRITICAL();
-    angle_rad[ROLL ] = rpy[ROLL];
-    angle_rad[PITCH] = rpy[PITCH];
-    heading_rad      = rpy[YAW] + magneticDeclination;	    // Add Magnetic Declination to the course
+    imu.rpy_rad[ROLL ] = rpy[ROLL];
+    imu.rpy_rad[PITCH] = rpy[PITCH];
+    imu.rpy_rad[YAW]      = rpy[YAW] + magneticDeclination;	    // Add Magnetic Declination to the course
 
-    angle[ROLL ] = RAD2DEG(angle_rad[ROLL ]) * 10;
-    angle[PITCH] = RAD2DEG(angle_rad[PITCH]) * 10;
-    heading		 = RAD2DEG(heading_rad);
+    imu.rpy[ROLL ] = RAD2DEG(imu.rpy_rad[ROLL ]) * 10;
+    imu.rpy[PITCH] = RAD2DEG(imu.rpy_rad[PITCH]) * 10;
+    imu.rpy[YAW]		 = RAD2DEG(imu.rpy_rad[YAW]);
 
     // Align to the value -180...180
-    if (heading > 180)
-        heading = heading - 360;
-    else if (heading < -180)
-        heading = heading + 360;
+    if (imu.rpy[YAW] > 180)
+        imu.rpy[YAW] = imu.rpy[YAW] - 360;
+    else if (imu.rpy[YAW] < -180)
+        imu.rpy[YAW] = imu.rpy[YAW] + 360;
     taskEXIT_CRITICAL();
 }
 

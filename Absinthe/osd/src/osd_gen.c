@@ -2296,10 +2296,10 @@ void osdScreen0(void)
 	sprintf(temp, "BAT:%d.%dV", power_sensor.flightBatteryVoltage / 10, power_sensor.flightBatteryVoltage % 10);
 	osdWriteString(temp, GRAPHICS_RIGHT - 5, GRAPHICS_BOTTOM - 40, 0, 0, TEXT_VA_TOP, TEXT_HA_RIGHT, 0, 3);
 
-	if (heading > 180)
-		calcHomeArrow((int16_t) (heading - 360));
+	if (imu.rpy[YAW] > 180)
+		calcHomeArrow((int16_t) (imu.rpy[YAW] - 360));
 	else
-		calcHomeArrow((int16_t) (heading));
+		calcHomeArrow((int16_t) (imu.rpy[YAW]));
 }
 
 void osdScreen1(void)
@@ -2411,7 +2411,7 @@ void osdScreen1(void)
 //		hud_draw_vertical_scale((int) GPS_altitude, 200, +1, APPLY_HDEADBAND(10), APPLY_VDEADBAND(10), 100, 20, 100, 7, 12, 15, 500, 0);
 // Draw compass.
 
-	if (heading < 0)
+	if (imu.rpy[YAW] < 0)
 	{
 //		hud_draw_linear_compass(360 + heading, 150, 120, GRAPHICS_RIGHT / 2, GRAPHICS_BOTTOM - 5, 15, 30, 7, 12, 0);
 	}
@@ -2445,8 +2445,8 @@ void osdHorizon(void)
     int16_t  x_c2, y_c2;
     float    cosroll, sinroll;
 
-    pitch = DEG2RAD(angle[PITCH]) / 10;
-    roll  = DEG2RAD(angle[ROLL ]) / 10;
+    pitch = DEG2RAD(imu.rpy[PITCH]) / 10;
+    roll  = DEG2RAD(imu.rpy[ROLL ]) / 10;
 
     cosroll = cosf(roll);
     sinroll = sinf(roll);
@@ -2637,8 +2637,8 @@ void osdScreen4(void)
 	const static uint8_t gColor[GRAPHICS_LINES_NUM] = { 0, 0, 1, 1 };
 
 	uint16_t x1, x2, y1, y2;
-	uint16_t aa = angle[ROLL] / 10 + 360;
-	uint16_t pp = angle[PITCH] / 10;
+	uint16_t aa = imu.rpy[ROLL] / 10 + 360;
+	uint16_t pp = imu.rpy[PITCH] / 10;
 	uint8_t n;
 
 	for (n = 0; n < GRAPHICS_LINES_NUM; n++)
@@ -2669,7 +2669,7 @@ void osdScreen4(void)
 	if (y < GRAPHICS_BOTTOM / 2 - 90) y = GRAPHICS_BOTTOM / 2 - 90;
 	if (y > GRAPHICS_BOTTOM / 2 + 90) y = GRAPHICS_BOTTOM / 2 + 90;
 
-	int16_t h = heading + 360;
+	int16_t h = imu.rpy[YAW] + 360;
 	//int16_t h = GPS_ground_course;
 
 	x1 = x + iSin(h) * 10 / 100 / 2;
@@ -2728,7 +2728,7 @@ void updateGraphics()
 	case 2:
 		clearGraphics();
 
-		osdDrawArtificialHorizon(-angle[ROLL] / 10, angle[PITCH] / 10, 55, 72, 115);
+		osdDrawArtificialHorizon(-imu.rpy[ROLL] / 10, imu.rpy[PITCH] / 10, 55, 72, 115);
 
 		// GPS_speed in cm/s
 		osdHudDrawVscale((uint16_t)((float)gps.speed * 0.36f), 20, HUD_HALIGN_RIGHT, 50, GRAPHICS_BOTTOM / 2, 180,

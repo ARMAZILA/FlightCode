@@ -42,7 +42,7 @@ void stabilize(float dT)
 		if ((flag(FLAG_ANGLE_MODE) || flag(FLAG_HORIZON_MODE)) && axis < 2)	// MODE relying on ACC
 		{
 		  // 50 degrees max inclination
-			errorAngle = constrain(2 * rcCommand[axis] + GPS_angle[axis], -500, +500) - angle[axis] + cfg.angleTrim[axis];
+			errorAngle = constrain(2 * rcCommand[axis] + GPS_angle[axis], -500, +500) - imu.rpy[axis] + cfg.angleTrim[axis];
 			PTermACC = errorAngle * cfg.P8[PIDLEVEL] / 100.0f;
 			PTermACC = constrain(PTermACC, -cfg.D8[PIDLEVEL] * 5, +cfg.D8[PIDLEVEL] * 5);
 			errorAngleI[axis] = constrain(errorAngleI[axis] + errorAngle, -10000, +10000); // WindUp

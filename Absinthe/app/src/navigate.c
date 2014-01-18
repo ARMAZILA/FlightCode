@@ -170,7 +170,7 @@ void GPS_reset_home_position(void)
         gps.home[LAT] = gps.coord[LAT];
         gps.home[LON] = gps.coord[LON];
         GPS_calc_longitude_scaling(gps.coord[LAT]); // need an initial value for distance and bearing calc
-        nav_takeoff_bearing = heading;              // save takeoff heading
+        nav_takeoff_bearing = imu.rpy[YAW];              // save takeoff heading
         // Set ground altitude
         flagSet(FLAG_GPS_FIX_HOME);
     }

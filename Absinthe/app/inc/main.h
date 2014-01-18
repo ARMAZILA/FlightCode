@@ -221,6 +221,11 @@ typedef enum {
     VAR_FLOAT	= 9
 } vartype_e;
 
+typedef enum {
+	ML_TELEMETRY_SERVO_OUTPUT_RAW	= 1 << 0,
+	ML_TELEMETRY_SCALED_IMU			= 1 << 1,
+} ml_telemetry_flag_t;
+
 /* Param table */
 typedef struct param_value_t {
     const char 		*name;
@@ -390,6 +395,7 @@ typedef struct config_t {
 
     uint8_t		mavlink_sysid;				// MAVLink system ID
     uint8_t		mavlink_compid;				// MAVLink component ID
+    uint32_t	mavlink_telemetry_flag;		//
 
     motorMixer_t customMixer[MAX_MOTORS];   // custom mixtable
     uint8_t magic_ef;                       // magic number, should be 0xEF
@@ -456,6 +462,12 @@ typedef struct alt_sensor_t {
 	int16_t 	baroTemp;						// baro sensor temperature in 0.1 degrees
 	int16_t 	sonarAlt;						// in cm. < 0: bad data
 } alt_sensor_t;
+
+typedef struct imu {
+	int16_t	rpy[3];			// Absolute angle inclination in multiple of 0.1 degree. ROLL: -1800...1800, PITCH -900..900, YAW -180...+180 degrees
+	float	rpy_rad[3];		// The same in radiant
+
+} imu_t;
 
 /* Available Flags */
 typedef enum {
@@ -525,10 +537,7 @@ void stabilize(float dT);
 // IMU
 extern float	gyroData[3];
 extern float	accSmooth[3];
-extern int16_t	angle[2];
-extern int16_t 	heading;
-extern float	angle_rad[2];
-extern float	heading_rad;
+extern imu_t	imu;
 extern int32_t  vario;
 extern int32_t 	EstAlt;
 

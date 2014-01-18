@@ -223,12 +223,12 @@ portTASK_FUNCTION_PROTO(simTask, pvParameters)
 
 				if (cfg.hil_mode == 2)
 				{
-					angle[ROLL ]		= swap_float(packet->roll) * 10;
-					angle[PITCH]		= -swap_float(packet->pitch) * 10;
-					angle_rad[ROLL ]	= DEG2RAD(swap_float(packet->roll));
-					angle_rad[PITCH]	= -DEG2RAD(swap_float(packet->pitch));
-					heading 			= swap_float(packet->head);
-					heading_rad			= DEG2RAD(swap_float(packet->head));
+					imu.rpy[ROLL ]		= swap_float(packet->roll) * 10;
+					imu.rpy[PITCH]		= -swap_float(packet->pitch) * 10;
+					imu.rpy_rad[ROLL ]	= DEG2RAD(swap_float(packet->roll));
+					imu.rpy_rad[PITCH]	= -DEG2RAD(swap_float(packet->pitch));
+					imu.rpy[YAW] 			= swap_float(packet->head);
+					imu.rpy_rad[YAW]			= DEG2RAD(swap_float(packet->head));
 					EstAlt 				= swap_float(packet->alt);
 				}
 

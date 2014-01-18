@@ -8,6 +8,7 @@
 const param_value_t valueTable[] = {
     { "MAVLINK_SYSID",	VAR_UINT8,  &cfg.mavlink_sysid, 	0, 255 },
     { "MAVLINK_COMPID",	VAR_UINT8,  &cfg.mavlink_compid, 	0, 255 },
+    { "MAVLINK_TLM",	VAR_UINT8,  &cfg.mavlink_telemetry_flag, 0, 0xFFFFFFFF },
 
     { "RCMAP_ROLL",		VAR_UINT8, 	&cfg.rcmap[0], 1, 18 },
     { "RCMAP_PITCH",	VAR_UINT8, 	&cfg.rcmap[1], 1, 18 },
@@ -474,6 +475,7 @@ static void resetFlashConfig(void)
 
     cfg.mavlink_sysid			= 20;
     cfg.mavlink_compid			= 200;
+    cfg.mavlink_telemetry_flag	= 3;
 
     // custom mixer. clear by defaults.
     for (i = 0; i < MAX_MOTORS; i++)

@@ -590,7 +590,7 @@ portTASK_FUNCTION_PROTO(sonarTask, pvParameters)
 		hcsr04_get_distance(acc_sensor.temp - 7, &alt);
 
 		// Check sonar data & maximum attitude angles
-		if (alt < 0 || alt > 250 || abs(angle[ROLL]) > 200 || abs(angle[PITCH]) > 200)
+		if (alt < 0 || alt > 250 || abs(imu.rpy[ROLL]) > 200 || abs(imu.rpy[PITCH]) > 200)
 		{
 			alt = -1;	// Bad value
 		}
