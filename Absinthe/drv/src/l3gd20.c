@@ -13,6 +13,7 @@
 #define L3GD20_CTRL_REG4       	0x23
 #define L3GD20_CTRL_REG5       	0x24
 #define L3GD20_REFERENCE       	0x25
+#define L3GD20_OUT_TEMP       	0x26
 #define L3GD20_STATUS_REG      	0x27
 #define L3GD20_GYRO_OUT        	0x28
 #define L3GD20_FIFO_CTRL_REG   	0x2E
@@ -169,7 +170,7 @@ uint8_t l3gd20GetTemp(int16_t * temp)
 {
 	uint8_t value;
 
-	if (!i2cRead(L3GD20_ADDRESS, L3GD20_FIFO_SRC_REG, 1, &value))
+	if (!i2cRead(L3GD20_ADDRESS, L3GD20_OUT_TEMP, 1, &value))
 		return MEMS_ERROR;
 
 	*temp = (int16_t) (value);

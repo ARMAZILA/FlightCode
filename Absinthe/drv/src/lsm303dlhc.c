@@ -290,12 +290,12 @@ status_t SetModeMag(Mode_M_t Mode)
  *******************************************************************************/
 status_t GetTemperature(int16_t* val)
 {
-	uint8_t valueH;
+	uint8_t value[2];
 
-	if (!ReadReg(MAG_I2C_ADDRESS, TEMP_OUT_H_M, &valueH))
+	if (!i2cRead(MAG_I2C_ADDRESS, TEMP_OUT_H_M | 0x80, 2, value))
 		return MEMS_ERROR;
 
-	*val = 25 + (int8_t) (valueH);
+	*val = (int16_t) ((value[0] << 8) | value[1]) / 16;
 
 	return MEMS_SUCCESS;
 }

@@ -417,7 +417,7 @@ typedef struct counter_t
 typedef struct gyro_sensor_t {
 	uint32_t	sample_count;					// Gyro sensor loop counter. Should be increased with 760 Hz freq (Gyro ODR).
 	uint32_t	overrun_count;					// Gyro sensor data not abalible counter. Should be 0.
-	int16_t		temp;							// Gyro sensor temperature
+	int16_t		temp;							// Gyro sensor temperature in 0.1 degrees of celsius
 	float		data_deg[3];					// Gyro sensor data. Scaled to degrees / second
 	float		data_rad[3];					// Gyro sensor data. Scaled to radian / second
 	float		average[3];						// Average value (degrees / second)
@@ -427,7 +427,7 @@ typedef struct gyro_sensor_t {
 typedef struct acc_sensor_t {
 	uint32_t	sample_count;					// Accel sensor loop counter. Should be increased with 760 Hz freq (Gyro ODR).
 	uint32_t	overrun_count;					// Accel sensor data not abalible counter. Should be 0.
-	int16_t		temp;							// Accel sensor temperature
+	int16_t		temp;							// Accel sensor temperature in 0.1 degrees of celsius
 	float		data_mss[3];					// Accel sensor data scaled to the m/s2
 	float		data_mw[3];						// Accel sensor data scaled to MultiWii
 	float		average[3];						// Average value (degrees / second)

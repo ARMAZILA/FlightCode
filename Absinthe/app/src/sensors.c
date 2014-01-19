@@ -121,8 +121,12 @@ static void accSensorUpdate(void)
 
     if (Temp_counter++ == 100)
     {
+    	int16_t t;
+
         Temp_counter = 0;
-    	GetTemperature(&acc_sensor.temp);
+
+    	if (GetTemperature(&t))
+    		acc_sensor.temp = 1.149 * t + 170;	// Convert to 0.1 degrees of Celcius
     }
 
 	for (axis = 0; axis < 3; axis++)
@@ -280,8 +284,12 @@ static void gyroSensorUpdate(void)
 
 	if (temp_counter++ == 100)
 	{
+		int16_t t;
+
 		temp_counter = 0;
-		l3gd20GetTemp(&gyro_sensor.temp);
+
+		if (l3gd20GetTemp(&t))
+			gyro_sensor.temp = -7.87 * t + 332.3;	// Convert to 0.1 degrees of Celcius
 	}
 
     uint8_t axis;

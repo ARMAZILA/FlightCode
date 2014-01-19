@@ -455,8 +455,6 @@ NO_CLICK                        =               0x00
 //LSB of 12bit (4 bit) TEMP_OUT (left giustify)
 #define TEMP_OUT_L_M                            0x32
 
-
-
 /* Exported macro ------------------------------------------------------------*/
 #define ValBit(VAR,Place)         (VAR & (1<<Place))
 #define BIT(x) ( (x) )

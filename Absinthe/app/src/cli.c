@@ -571,9 +571,9 @@ static void cliSensor(char *cmdline)
 	printf("Gyro count        = %u\r\n", gyro_sensor.sample_count);
 	printf("Gyro overruns     = %u\r\n", gyro_sensor.overrun_count);
 	printf("Acc count         = %u\r\n", acc_sensor.sample_count);
-	printf("Acc overruns      = %u\r\n", acc_sensor.overrun_count);
+	printf("Acc overruns      = %u\r\n\r\n", acc_sensor.overrun_count);
 
-	printf("Gyro Temp         = %d\r\n", gyro_sensor.temp);
+	printf("Gyro Temp         = %d.%d\r\n", gyro_sensor.temp / 10, abs(gyro_sensor.temp) % 10);
 
 	ftoa(gyro_sensor.data_deg[0], buf);
 	printf("Gyro Data         = %s", buf);
@@ -603,7 +603,7 @@ static void cliSensor(char *cmdline)
 	ftoa(gyro_sensor.variance[2], buf);
 	printf(" %s\r\n\r\n", buf);
 
-	printf("Acc Temp          = %d\r\n", acc_sensor.temp);
+	printf("Acc Temp          = %d.%d\r\n", acc_sensor.temp / 10, abs(acc_sensor.temp) % 10);
 
 	ftoa(acc_sensor.data_mss[0], buf);
 	printf("Acc Data          = %s", buf);
