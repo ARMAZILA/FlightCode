@@ -669,7 +669,7 @@ static void cliSet(char *cmdline)
         printf("Current settings: \r\n");
         for (i = 0; i < valueTableCount; i++) {
             val = &valueTable[i];
-            printf("%s\t= ", valueTable[i].name);
+            printf("%14s = ", valueTable[i].name);
             cliPrintVar(val, len); // when len is 1 (when * is passed as argument), it will print min/max values as well, for gui
             printf("\r\n");
         }

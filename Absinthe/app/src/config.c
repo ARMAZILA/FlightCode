@@ -8,7 +8,7 @@
 const param_value_t valueTable[] = {
     { "MAVLINK_SYSID",	VAR_UINT8,  &cfg.mavlink_sysid, 	0, 255 },
     { "MAVLINK_COMPID",	VAR_UINT8,  &cfg.mavlink_compid, 	0, 255 },
-    { "MAVLINK_TLM",	VAR_UINT32,  &cfg.mavlink_telemetry_flag, 0, 0xFFFFFFFF },
+    { "MAVLINK_TLM",	VAR_UINT32, &cfg.mavlink_telemetry_flag, 0, 0xFFFFFFFF },
 
     { "BOX_ANGLE",		VAR_UINT16, &cfg.activate[BOXANGLE], 0, 0xFFFF },
     { "BOX_HORIZON",	VAR_UINT16, &cfg.activate[BOXHORIZON], 0, 0xFFFF },
