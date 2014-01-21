@@ -8,7 +8,14 @@
 const param_value_t valueTable[] = {
     { "MAVLINK_SYSID",	VAR_UINT8,  &cfg.mavlink_sysid, 	0, 255 },
     { "MAVLINK_COMPID",	VAR_UINT8,  &cfg.mavlink_compid, 	0, 255 },
-    { "MAVLINK_TLM",	VAR_UINT8,  &cfg.mavlink_telemetry_flag, 0, 0xFFFFFFFF },
+    { "MAVLINK_TLM",	VAR_UINT32,  &cfg.mavlink_telemetry_flag, 0, 0xFFFFFFFF },
+
+    { "BOX_ANGLE",		VAR_UINT16, &cfg.activate[BOXANGLE], 0, 0xFFFF },
+    { "BOX_HORIZON",	VAR_UINT16, &cfg.activate[BOXHORIZON], 0, 0xFFFF },
+    { "BOX_ALTHOLD",	VAR_UINT16, &cfg.activate[BOXALTHOLD], 0, 0xFFFF },
+    { "BOX_MAG",		VAR_UINT16, &cfg.activate[BOXMAG], 0, 0xFFFF },
+    { "BOX_GPSHOME",	VAR_UINT16, &cfg.activate[BOXGPSHOME], 0, 0xFFFF },
+    { "BOX_GPSHOLD",	VAR_UINT16, &cfg.activate[BOXGPSHOLD], 0, 0xFFFF },
 
     { "RCMAP_ROLL",		VAR_UINT8, 	&cfg.rcmap[0], 1, 18 },
     { "RCMAP_PITCH",	VAR_UINT8, 	&cfg.rcmap[1], 1, 18 },
