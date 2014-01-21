@@ -67,7 +67,7 @@ char *ftoa(float x, char *floatString);
 const char * const mixerNames[] = {
     "TRI", "QUADP", "QUADX", "BI", "GIMBAL", "Y6", "HEX6",
     "FLYING_WING", "Y4", "HEX6X", "OCTOX8", "OCTOFLATP", "OCTOFLATX",
-    "AIRPLANE", "HELI_120_CCPM", "HELI_90_DEG", "VTAIL4", "CUSTOM", NULL
+    "AIRPLANE", "HELI_120_CCPM", "HELI_90_DEG", "VTAIL4", "QUADC", "CUSTOM", NULL
 };
 
 // sync this with AvailableSensors enum from board.h

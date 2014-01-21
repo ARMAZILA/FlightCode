@@ -61,12 +61,12 @@ static const motorMixer_t mixerY4[] = {
 };
 
 static const motorMixer_t mixerHex6X[] = {
-    { 1.0f, -0.866025f,  1.0f,  1.0f },     // REAR_R
-    { 1.0f, -0.866025f, -1.0f,  1.0f },     // FRONT_R
-    { 1.0f,  0.866025f,  1.0f, -1.0f },     // REAR_L
-    { 1.0f,  0.866025f, -1.0f, -1.0f },     // FRONT_L
-    { 1.0f, -0.866025f,  0.0f, -1.0f },     // RIGHT
-    { 1.0f,  0.866025f,  0.0f,  1.0f },     // LEFT
+    { 1.0f, -0.634f,  1.0f,  1.0f },     // REAR_R
+    { 1.0f, -0.634f, -1.0f,  1.0f },     // FRONT_R
+    { 1.0f,  0.634f,  1.0f, -1.0f },     // REAR_L
+    { 1.0f,  0.634f, -1.0f, -1.0f },     // FRONT_L
+    { 1.0f, -0.634f,  0.0f, -1.0f },     // RIGHT
+    { 1.0f,  0.634f,  0.0f,  1.0f },     // LEFT
 };
 
 static const motorMixer_t mixerOctoX8[] = {
@@ -109,6 +109,13 @@ static const motorMixer_t mixerVtail4[] = {
     { 1.0f,  1.0f, -1.0f, -0.0f },          // FRONT_L
 };
 
+static const motorMixer_t mixerQuadC[] = {
+    { 1.0f, -0.5f,  1.0f, -1.0f },          // REAR_R
+    { 1.0f, -0.5f, -1.0f,  1.0f },          // FRONT_R
+    { 1.0f,  0.5f,  1.0f,  1.0f },          // REAR_L
+    { 1.0f,  0.5f, -1.0f, -1.0f },          // FRONT_L
+};
+
 // Keep this synced with MultiType struct in main.h!
 const mixer_t mixers[] = {
 //    Mo Se Mixtable
@@ -130,6 +137,7 @@ const mixer_t mixers[] = {
     { 0, 1, NULL },                // * MULTITYPE_HELI_120_CCPM
     { 0, 1, NULL },                // * MULTITYPE_HELI_90_DEG
     { 4, 0, mixerVtail4 },         // MULTITYPE_VTAIL4
+    { 4, 0, mixerQuadC },          // MULTITYPE_QUAD_C
     { 0, 0, NULL },                // MULTITYPE_CUSTOM
 };
 
