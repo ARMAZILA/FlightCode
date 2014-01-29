@@ -101,7 +101,7 @@ portTASK_FUNCTION_PROTO(initTask, pvParameters)
 	xTaskCreate(mspTask,     	 (signed char *) "Serial",  512, (void *) NULL,  2, (xTaskHandle *) NULL);
 	xTaskCreate(mavlinkTask, 	 (signed char *) "MAVLink", 512, (void *) NULL,  2, (xTaskHandle *) NULL);
 
-	if (cfg.hil_mode)
+	if (cfg.sim_mode)
 		xTaskCreate(simTask, 	 (signed char *) "HIL",     512, (void *) NULL,  2, (xTaskHandle *) NULL);
 
 	/* Initialize sensors. Do it before starting watch dog timer */

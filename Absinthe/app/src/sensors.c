@@ -446,7 +446,7 @@ portTASK_FUNCTION_PROTO(sensorTask, pvParameters)
 		// Measure loop rate just afer reading the sensors
 		uint32_t sTime = micros();
 
-		if (cfg.hil_mode == 0) {
+		if (cfg.sim_mode == 0) {
 			// Read gyro sensor data each cycle 10 ms
 			gyroSensorUpdate();
 
@@ -477,7 +477,7 @@ portTASK_FUNCTION_PROTO(sensorTask, pvParameters)
 		counters.sensorReadTime = counters.sensorReadTime * 0.99 + sensorReadTime * 0.01;
 		debug[3] = counters.sensorReadTime;
 
-		if (cfg.hil_mode != 2)
+		if (cfg.sim_mode != 2)
 		{
 			switch (cfg.imu_algorithm)
 			{

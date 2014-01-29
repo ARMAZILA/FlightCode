@@ -42,7 +42,7 @@
 #include "sbus.h"
 
 #define MW_VERSION  			211
-#define SW_VERSION				"1.4"
+#define SW_VERSION				"1.5d"
 
 #define LAT  					0
 #define LON  					1
@@ -284,8 +284,8 @@ typedef struct config_t {
     float	 	acc_scale[3]; 				// Accel FS=8g, Sensitivity = 4 mg/lsb
     float	 	acc_temp_comp[3];			// Accel temperature compensation factor
     float	 	acc_magnitude;
-    uint8_t  	acc_lpf_factor;             // Set the Low Pass Filter factor for ACC. Increasing this value would reduce ACC noise (visible in GUI), but would increase ACC lag time. Zero = no filter
-    uint8_t  	acc_lpf_for_velocity;       // ACC lowpass for AccZ height hold
+    float	  	acc_lpf_factor;             // Set the Low Pass Filter factor for ACC. Increasing this value would reduce ACC noise (visible in GUI), but would increase ACC lag time. Zero = no filter
+    float	  	acc_lpf_for_velocity;       // ACC lowpass for AccZ height hold
     uint8_t  	accz_deadband;              // ??
     uint8_t 	acc_inflight_cal;			// Enable inflight accel calibration feature
 
@@ -299,18 +299,18 @@ typedef struct config_t {
     int16_t  	magZero[3];
     int16_t  	mag_declination;            // Get your magnetic decliniation from here : http://magnetic-declination.com/
 
-    uint8_t  	baro_tab_size;              // size of baro filter array
+    uint8_t  	baro_tab_size;              // - size of baro filter array
     float 	 	baro_noise_lpf;             // additional LPF to reduce baro noise
-    float 	 	baro_cf;                    // apply Complimentary Filter to keep the calculated velocity based on baro velocity (i.e. near real velocity)
+    float 	 	baro_cf;                    // - apply Complimentary Filter to keep the calculated velocity based on baro velocity (i.e. near real velocity)
     float	 	baro_cf_alt;
     float	 	baro_cf_vel;
 
     int16_t  	angleTrim[2];               // accelerometer trim
     uint8_t  	imu_algorithm;				// select imu calculation algoritm
-    uint8_t		hil_mode;					// Hardware-in-the-loop simulation mode
-    										// 0 - HIL off
-    										// 1 - sensor off
-    										// 2 - sensor & IMU off
+    uint8_t		sim_mode;					// Simulation mode
+    										// 0 - Normal mode, simulator switch off
+    										// 1 - Simulator on, sensor off
+    										// 2 - Simulator on, sensor & IMU off
 
     uint16_t 	activate[CHECKBOXITEMS];    // activate switches
     uint8_t  	batvscale;                  // adjust this to match battery voltage to reported value

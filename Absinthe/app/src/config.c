@@ -16,6 +16,7 @@ const param_value_t valueTable[] = {
     { "BOX_MAG",		VAR_UINT16, &cfg.activate[BOXMAG], 0, 0xFFFF },
     { "BOX_GPSHOME",	VAR_UINT16, &cfg.activate[BOXGPSHOME], 0, 0xFFFF },
     { "BOX_GPSHOLD",	VAR_UINT16, &cfg.activate[BOXGPSHOLD], 0, 0xFFFF },
+//	TODO: BOX_MISSION
 
     { "RCMAP_ROLL",		VAR_UINT8, 	&cfg.rcmap[0], 1, 18 },
     { "RCMAP_PITCH",	VAR_UINT8, 	&cfg.rcmap[1], 1, 18 },
@@ -45,12 +46,12 @@ const param_value_t valueTable[] = {
     { "RC_MINCMD",		VAR_UINT16, &cfg.mincommand, 0, 2000 },
     { "RC_MINCHK",		VAR_UINT16, &cfg.mincheck, 0, 2000 },
     { "RC_MAXCHK",		VAR_UINT16, &cfg.maxcheck, 0, 2000 },
-    { "RC_MOTORSTOP", 	VAR_UINT8,  &cfg.motor_stop, 0, 1 },
+//    { "RC_MOTORSTOP", 	VAR_UINT8,  &cfg.motor_stop, 0, 1 },
     { "RC_FAILSAFE", 	VAR_UINT8,  &cfg.failsafe, 0, 1 },
     { "RC_FS_DELAY",	VAR_UINT8, 	&cfg.failsafe_delay, 0, 200 },
-    { "RC_FS_OFf_DEL",	VAR_UINT8, 	&cfg.failsafe_off_delay, 0, 200 },
+    { "RC_FS_OFF_DEL",	VAR_UINT8, 	&cfg.failsafe_off_delay, 0, 200 },
     { "RC_FS_THROTT", 	VAR_UINT16, &cfg.failsafe_throttle, 1000, 2000 },
-    { "RC_SPEK_HIRES",	VAR_UINT8, 	&cfg.spektrum_hires, 0, 1 },
+//    { "RC_SPEK_HIRES",	VAR_UINT8, 	&cfg.spektrum_hires, 0, 1 },
     { "RC_RP_RATE",		VAR_UINT8, 	&cfg.rollPitchRate, 0, 255 },
     { "RC_Y_RATE",		VAR_UINT8, 	&cfg.yawRate, 0, 255 },
     { "RC_RATE",		VAR_UINT8, 	&cfg.rcRate8, 0, 255 },
@@ -84,42 +85,42 @@ const param_value_t valueTable[] = {
     { "WING_DIR_R_L",	VAR_INT8, 	&cfg.roll_direction_l, -1, 1 },
     { "WING_DIR_R_R",	VAR_INT8, 	&cfg.roll_direction_r, -1, 1 },
 
-    { "GIMBAL_ON",		VAR_UINT8,	&cfg.gimbal, 0, 1},
-    { "GIMBAL_FLAG",	VAR_UINT8,	&cfg.gimbal_flags, 0, 255},
-    { "GIMBAL_GAIN_P",	VAR_INT8, 	&cfg.gimbal_pitch_gain, -100, 100 },
-    { "GIMBAL_GAIN_R",	VAR_INT8, 	&cfg.gimbal_roll_gain, -100, 100 },
-    { "GIMBAL_MIN_P",	VAR_UINT16, &cfg.gimbal_pitch_min, 100, 3000 },
-    { "GIMBAL_MAX_P",	VAR_UINT16, &cfg.gimbal_pitch_max, 100, 3000 },
-    { "GIMBAL_MID_P",	VAR_UINT16, &cfg.gimbal_pitch_mid, 100, 3000 },
-    { "GIMBAL_MIN_R",	VAR_UINT16, &cfg.gimbal_roll_min, 100, 3000 },
-    { "GIMBAL_MAX_R",	VAR_UINT16, &cfg.gimbal_roll_max, 100, 3000 },
-    { "GIMBAL_MID_R",	VAR_UINT16, &cfg.gimbal_roll_mid, 100, 3000 },
+//    { "GIMBAL_ON",		VAR_UINT8,	&cfg.gimbal, 0, 1},
+//    { "GIMBAL_FLAG",	VAR_UINT8,	&cfg.gimbal_flags, 0, 255},
+//    { "GIMBAL_GAIN_P",	VAR_INT8, 	&cfg.gimbal_pitch_gain, -100, 100 },
+//    { "GIMBAL_GAIN_R",	VAR_INT8, 	&cfg.gimbal_roll_gain, -100, 100 },
+//    { "GIMBAL_MIN_P",	VAR_UINT16, &cfg.gimbal_pitch_min, 100, 3000 },
+//    { "GIMBAL_MAX_P",	VAR_UINT16, &cfg.gimbal_pitch_max, 100, 3000 },
+//    { "GIMBAL_MID_P",	VAR_UINT16, &cfg.gimbal_pitch_mid, 100, 3000 },
+//    { "GIMBAL_MIN_R",	VAR_UINT16, &cfg.gimbal_roll_min, 100, 3000 },
+//    { "GIMBAL_MAX_R",	VAR_UINT16, &cfg.gimbal_roll_max, 100, 3000 },
+//    { "GIMBAL_MID_R",	VAR_UINT16, &cfg.gimbal_roll_mid, 100, 3000 },
 
     { "MAG_DECLIN",		VAR_INT16, 	&cfg.mag_declination, -18000, 18000 },
 
-    { "ACC_SCALE_R",	VAR_FLOAT, 	&cfg.acc_scale[ROLL ], 	   -1, 1 },
-    { "ACC_SCALE_P",	VAR_FLOAT, 	&cfg.acc_scale[PITCH], 	   -1, 1 },
-    { "ACC_SCALE_Y",	VAR_FLOAT, 	&cfg.acc_scale[YAW  ], 	   -1, 1 },
-    { "ACC_TCOMP_R",	VAR_FLOAT, 	&cfg.acc_temp_comp[ROLL ], -1, 1 },
-    { "ACC_TCOMP_P",	VAR_FLOAT, 	&cfg.acc_temp_comp[PITCH], -1, 1 },
-    { "ACC_TCOMP_Y",	VAR_FLOAT, 	&cfg.acc_temp_comp[YAW  ], -1, 1 },
-    { "ACC_LPF_FAC",	VAR_UINT8, 	&cfg.acc_lpf_factor, 	   0, 250 },
-    { "ACC_LPF_VEL",	VAR_UINT8, 	&cfg.acc_lpf_for_velocity, 1, 250 },
+//    { "ACC_SCALE_R",	VAR_FLOAT, 	&cfg.acc_scale[ROLL ], 	   -1, 1 },
+//    { "ACC_SCALE_P",	VAR_FLOAT, 	&cfg.acc_scale[PITCH], 	   -1, 1 },
+//    { "ACC_SCALE_Y",	VAR_FLOAT, 	&cfg.acc_scale[YAW  ], 	   -1, 1 },
+//    { "ACC_TCOMP_R",	VAR_FLOAT, 	&cfg.acc_temp_comp[ROLL ], -1, 1 },
+//    { "ACC_TCOMP_P",	VAR_FLOAT, 	&cfg.acc_temp_comp[PITCH], -1, 1 },
+//    { "ACC_TCOMP_Y",	VAR_FLOAT, 	&cfg.acc_temp_comp[YAW  ], -1, 1 },
+    { "ACC_LPF_FAC",	VAR_FLOAT, 	&cfg.acc_lpf_factor, 	   0, 1 },
+    { "ACC_LPF_VEL",	VAR_FLOAT, 	&cfg.acc_lpf_for_velocity, 0, 1 },
     { "ACC_TRIM_R",		VAR_INT16, 	&cfg.angleTrim[ROLL], 	   -300, 300 },
     { "ACC_TRIM_P",		VAR_INT16, 	&cfg.angleTrim[PITCH], 	   -300, 300 },
 
-    { "GYRO_SCALE_R",	VAR_FLOAT, 	&cfg.gyro_scale[ROLL ], -1, 1 },
-    { "GYRO_SCALE_P",	VAR_FLOAT, 	&cfg.gyro_scale[PITCH], -1, 1 },
-    { "GYRO_SCALE_Y",	VAR_FLOAT, 	&cfg.gyro_scale[YAW  ], -1, 1 },
-    { "GYRO_TCOPM_R",	VAR_FLOAT, 	&cfg.gyro_temp_comp[ROLL ], -1, 1 },
-    { "GYRO_TCOMP_P",	VAR_FLOAT, 	&cfg.gyro_temp_comp[PITCH], -1, 1 },
-    { "GYRO_TCOMP_Y",	VAR_FLOAT, 	&cfg.gyro_temp_comp[YAW  ], -1, 1 },
+//    { "GYRO_SCALE_R",	VAR_FLOAT, 	&cfg.gyro_scale[ROLL ], -1, 1 },
+//    { "GYRO_SCALE_P",	VAR_FLOAT, 	&cfg.gyro_scale[PITCH], -1, 1 },
+//   { "GYRO_SCALE_Y",	VAR_FLOAT, 	&cfg.gyro_scale[YAW  ], -1, 1 },
+//    { "GYRO_TCOPM_R",	VAR_FLOAT, 	&cfg.gyro_temp_comp[ROLL ], -1, 1 },
+//    { "GYRO_TCOMP_P",	VAR_FLOAT, 	&cfg.gyro_temp_comp[PITCH], -1, 1 },
+//    { "GYRO_TCOMP_Y",	VAR_FLOAT, 	&cfg.gyro_temp_comp[YAW  ], -1, 1 },
     { "GYRO_CMPF_FAC",	VAR_UINT16, &cfg.gyro_cmpf_factor, 100, 1000 },
-    { "GYRO_SMOOTHING",	VAR_UINT8,  &cfg.gyro_smoothing, 0, 1 },
+//    { "GYRO_SMOOTHING",	VAR_UINT8,  &cfg.gyro_smoothing, 0, 1 },
 
-    { "BARO_TAB_SIZE",	VAR_UINT8, 	&cfg.baro_tab_size, 0, BARO_TAB_SIZE_MAX },
+//    { "BARO_TAB_SIZE",	VAR_UINT8, 	&cfg.baro_tab_size, 0, BARO_TAB_SIZE_MAX },
     { "BARO_NOISE_LPF", VAR_FLOAT, 	&cfg.baro_noise_lpf, 0, 1 },
-    { "BARO_CF",		VAR_FLOAT, 	&cfg.baro_cf, 0, 1 },
+//    { "BARO_CF",		VAR_FLOAT, 	&cfg.baro_cf, 0, 1 },
     { "BARO_CF_ALT",	VAR_FLOAT, 	&cfg.baro_cf_alt, 0, 1 },
     { "BARO_CF_VEL",	VAR_FLOAT, 	&cfg.baro_cf_vel, 0, 1 },
 
@@ -158,16 +159,17 @@ const param_value_t valueTable[] = {
     { "PID_LEVEL_P", 	VAR_UINT8, 	&cfg.P8[PIDLEVEL], 0, 200 },
     { "PID_LEVEL_I", 	VAR_UINT8, 	&cfg.I8[PIDLEVEL], 0, 200 },
     { "PID_LEVEL_D", 	VAR_UINT8, 	&cfg.D8[PIDLEVEL], 0, 200 },
+    { "PID_MAG_P", 		VAR_UINT8, 	&cfg.P8[PIDMAG], 0, 200 },
 
     { "OSD_SCREEN",		VAR_UINT8, 	&cfg.osd_screen, 0, 15 },
-    { "OSD_X",			VAR_UINT16, &osd_x, 0, 300 },
-    { "OSD_Y",			VAR_UINT16, &osd_y, 0, 300 },
-    { "OSD_H",			VAR_UINT16, &osd_h, 0, 300 },
-    { "OSD_DIR",		VAR_INT16, 	&_GPS_directionToHome, -400, 400 },
-    { "OSD_DIS",		VAR_UINT16, &_GPS_distanceToHome, 0, 10000 },
+//    { "OSD_X",			VAR_UINT16, &osd_x, 0, 300 },
+//    { "OSD_Y",			VAR_UINT16, &osd_y, 0, 300 },
+//    { "OSD_H",			VAR_UINT16, &osd_h, 0, 300 },
+//    { "OSD_DIR",		VAR_INT16, 	&_GPS_directionToHome, -400, 400 },
+//    { "OSD_DIS",		VAR_UINT16, &_GPS_distanceToHome, 0, 10000 },
 
     { "IMUALGORITHM",	VAR_UINT8, 	&cfg.imu_algorithm, 1, 4 },
-    { "HIL_MODE",		VAR_UINT8, 	&cfg.hil_mode, 0, 2 },
+    { "SIM_MODE",		VAR_UINT8, 	&cfg.sim_mode, 0, 2 },
 
     { "PORT_MAP",		VAR_UINT8,  &cfg.port_map, 0, 2 },
     { "UART1_BAUDRATE",	VAR_UINT32, &cfg.uart1_baudrate, 1200, 115200 },
@@ -363,8 +365,8 @@ static void resetFlashConfig(void)
     cfg.acc_temp_comp[PITCH] 	= 0.0f;
     cfg.acc_temp_comp[YAW  ] 	= 0.0f;
     cfg.acc_magnitude			= 9.80665f;
-    cfg.acc_lpf_factor 			= 4;
-    cfg.acc_lpf_for_velocity 	= 10;
+    cfg.acc_lpf_factor 			= 0.25;
+    cfg.acc_lpf_for_velocity 	= 0.1;
     cfg.accz_deadband 			= 50;
     cfg.gyro_bias[ROLL ]		= 0.0f;
     cfg.gyro_bias[PITCH]		= 0.0f;
@@ -478,7 +480,7 @@ static void resetFlashConfig(void)
     cfg.port_map				= 2;	// HIL
     cfg.uart1_baudrate			= 115200;
 
-    cfg.hil_mode				= 0;
+    cfg.sim_mode				= 0;
 
     cfg.mavlink_sysid			= 20;
     cfg.mavlink_compid			= 200;

@@ -14,29 +14,19 @@ typedef struct {
     float		lat;		// Latitude in degrees
     float		lon;		// Longitude in degrees
     float		alt;		// Altitude in meters
-    float		head;		// Course over ground in degrees
-    float		airspeed;	// Air speed 0.1 m/s
-    float		groundspeed;// Ground speed 0.1 m/s
-    float		downspeed;	// m/s
-    float		acc_x;		// m/ss
-    float		acc_y;		// m/ss
-    float		acc_z;		// m/ss
-    float		gyro_x;		// degrees per second
-    float		gyro_y;		// degrees per second
-    float		gyro_z;		// degrees per second
-    float		roll;		// Roll in degrees
-    float		pitch;		// Pitch in degrees
+    float		head;		// PLANE HEADING DEGREES TRUE in Radians
+    float		airspeed;	// AIRSPEED INDICATED in meter per second
+    float		speed;		// GROUND VELOCITY in meter per second
+    float		acc_x;		// meter per second squared
+    float		acc_y;		// GForce
+    float		acc_z;		// meter per second squared
+    float		gyro_x;		// radian per second
+    float		gyro_y;		// radian per second
+    float		gyro_z;		// radian per second
+    float		roll;		// Roll in Radians
+    float		pitch;		// Pitch in Radians
+    float		eng_rpm;	// Engine 1 rpm
 } sim_pack_in_t;
-
-// State mashine codes
-typedef enum {
-    IDLE,
-    MAGIC_4C,
-    MAGIC_56,
-    MAGIC_41,
-    MAGIC_4D,
-    PAYLOAD,
-} c_state_t;
 
 #include "fifo_buffer.h"
 
@@ -49,57 +39,6 @@ serialSendByte_t 	simSendByte = NULL;
 serialReadByte_t	simReadByte = NULL;
 serialHasData_t		simHasData = NULL;
 
-static bool sim_parse_char(uint8_t c, char * inBuf)
-{
-	static uint8_t	bufferIndex = 0;
-	static uint8_t state = IDLE;
-
-	switch (state)
-	{
-	case IDLE:
-		state = (c == 0x4C) ? MAGIC_4C : IDLE;
-		break;
-
-	case MAGIC_4C:
-		state = (c == 0x56) ? MAGIC_56 : IDLE;
-		break;
-
-	case MAGIC_56:
-		state = (c == 0x41) ? MAGIC_41 : IDLE;
-		break;
-
-	case MAGIC_41:
-		if (c == 0x4D)
-		{
-			state = MAGIC_4D;
-			bufferIndex = 0;
-		}
-		else
-			state = IDLE;
-		break;
-
-	case MAGIC_4D:
-	{
-		inBuf[bufferIndex++] = c;
-		if (bufferIndex == sizeof(sim_pack_in_t))
-		{
-			state = IDLE;
-			bufferIndex = 0;
-			return true;
-		}
-		break;
-	}
-
-	} // switch
-
-	return false;
-}
-
-static float swap_float(float f) {
-    char *c = (char *) &f;
-    return * (float *) (char[]) {c[3], c[2], c[1], c[0] };
-}
-
 /* UART1 helper functions */
 static void simSendByte_uart1(uint8_t data) 	{ uartWrite(SERIAL_UART1, data); }
 static void simCallback_uart1(uint16_t data) 	{ fifoBuf_putByte(&sim_Rx_Buffer_Hnd, data); }
@@ -111,65 +50,89 @@ static void simSendByte_vcp(uint8_t data)		{ vcpSendByte(simVcpPort, data); }
 static uint8_t simReadByte_vcp(void)			{ return vcpGetByte(simVcpPort); }
 static uint16_t simHasData_vcp(void)			{ return vcpHasData(simVcpPort); }
 
-/* Print string to symulator port */
-static void simPrint(char *str)
+static bool simParseChar(uint8_t c, char * inBuf)
 {
-    while (*str)
-    	simSendByte(*(str++));
+	static uint8_t	bufferIndex = 0;
+	static uint32_t sequence = {0xFFFFFFFF};
+
+	sequence = sequence << 8;
+	sequence &= 0xFFFFFF00;
+	sequence |= c;
+
+	if(sequence == 0x0000C0FF)
+		bufferIndex = 0;
+	else
+		if(bufferIndex < sizeof(sim_pack_in_t))
+		{
+			inBuf[bufferIndex++] = c;
+			if (bufferIndex == sizeof(sim_pack_in_t))
+					{
+						return true;
+					}
+		}
+
+	return false;
 }
 
-static void simSendTxt(void)
+void simSend32(uint32_t a)
 {
-	char buf[12];
+	  simSendByte((a    ) & 0xFF);
+	  simSendByte((a>> 8) & 0xFF);
+	  simSendByte((a>>16) & 0xFF);
+	  simSendByte((a>>24) & 0xFF);
+}
+
+/* 32-bit Parameter Type */
+typedef union {
+  uint32_t  UInt;
+  uint8_t	Byte[4];
+  float		Float;
+} Param32;
+
+// Send the packet to the simulator Prepar3D
+// Format: Heading, Roll, Pitch, Yaw, Throttle, debug1, debug2
+static void simSendPacket(void)
+{
+	static Param32 p;
 
 	switch(cfg.mixerConfiguration)
 	{
 	case MULTITYPE_QUADP:
-		// Use armazila.quad.xml protocol congiguration file
-		ftoa((motor[0] - 1000) / 1000.0f, buf);	// Throttle0 (all values 0...1)
-		simPrint(buf);
-		simSendByte('\t');
-
-		ftoa((motor[1] - 1000) / 1000.0f, buf);	// Throttle1
-		simPrint(buf);
-		simSendByte('\t');
-
-		ftoa((motor[2] - 1000) / 1000.0f, buf);	// Throttle2
-		simPrint(buf);
-		simSendByte('\t');
-
-		ftoa((motor[3] - 1000) / 1000.0f, buf);	// Throttle3
-		simPrint(buf);
-		simPrint("\r\n");
 
 		break;
 
 	case MULTITYPE_FLYING_WING:
-		// Use armazila.wing.xml protocol congiguration file
-		ftoa((servo[0] - 1500) / 500.0f, buf);		// Left aileron (-1...1)
-		simPrint(buf);
-		simSendByte('\t');
 
-		ftoa((servo[1] - 1500) / 500.0f, buf);		// Right aileron (-1...1)
-		simPrint(buf);
-		simSendByte('\t');
+		break;
 
-		ftoa((motor[0] - 1000) / 1000.0f, buf);		// Throttle (0...1)
-		simPrint(buf);
-		simPrint("\r\n");
+	case MULTITYPE_HELI_90_DEG:
+		// Send float NaN
+		simSend32(0xFFC00000);
 
+		p.Float = constrain((servo[0] - cfg.servotrim[0]) / 5, -100, 100);
+		simSend32(p.UInt);
+
+		p.Float = constrain((servo[1] - cfg.servotrim[1]) / 5, -100, 100);;
+		simSend32(p.UInt);
+
+		p.Float = constrain((servo[2] - cfg.servotrim[2]) / 5, -100, 100);
+		simSend32(p.UInt);
+
+		p.Float = constrain((motor[0] - cfg.minthrottle) / 10, 0, 100);
+		simSend32(p.UInt);
+
+		p.Float = 0;
+		simSend32(p.UInt);
+
+		p.Float = 0;
+		simSend32(p.UInt);
 		break;
 	}
 }
 
 /*
- * 	Flightgear flight simulator generic protocol task
- * 	Use armazila.quad.xml protocol congiguration file for mixer type QUADP
- *	Use armazila.wing.xml protocol congiguration file for mixer type FLYING_WING
+ * 	Prepar3D flight simulator protocol task
  * 	We use VCP2 or UART1 if configured
- *
- * 	an error is detected in flightgear 2.10. Description here:
- * 	http://code.google.com/p/flightgear-bugs/issues/detail?id=1191
  */
 portTASK_FUNCTION_PROTO(simTask, pvParameters)
 {
@@ -213,7 +176,7 @@ portTASK_FUNCTION_PROTO(simTask, pvParameters)
 
     		ch = simReadByte();	// Get SIM port data byte
 
-    		if (sim_parse_char(ch, (char *) packet))
+    		if (simParseChar(ch, (char *) packet))
     		{
 
 				// Aply value from simulator
@@ -221,35 +184,35 @@ portTASK_FUNCTION_PROTO(simTask, pvParameters)
 				// 1 - sensor off
 				// 2 - sensor & IMU off
 
-				if (cfg.hil_mode == 2)
+				if (cfg.sim_mode == 2)
 				{
-					imu.rpy[ROLL ]		= swap_float(packet->roll) * 10;
-					imu.rpy[PITCH]		= -swap_float(packet->pitch) * 10;
-					imu.rpy_rad[ROLL ]	= DEG2RAD(swap_float(packet->roll));
-					imu.rpy_rad[PITCH]	= -DEG2RAD(swap_float(packet->pitch));
-					imu.rpy[YAW] 			= swap_float(packet->head);
-					imu.rpy_rad[YAW]			= DEG2RAD(swap_float(packet->head));
-					EstAlt 				= swap_float(packet->alt);
+					imu.rpy[ROLL ]		= RAD2DEG(-packet->roll) * 10;
+					imu.rpy[PITCH]		= RAD2DEG(-packet->pitch) * 10;
+					imu.rpy_rad[ROLL ]	= -packet->roll;
+					imu.rpy_rad[PITCH]	= -packet->pitch;
+					imu.rpy[YAW] 		= RAD2DEG(packet->head);
+					imu.rpy_rad[YAW]	= packet->head;
+					EstAlt 				= packet->alt * 100;
 				}
 
-				accSmooth[ROLL ]	= swap_float(packet->acc_x) / 9.80665f * acc_1G;
-				accSmooth[PITCH] 	= swap_float(packet->acc_y) / 9.80665f * acc_1G;
-				accSmooth[YAW  ]   	= -swap_float(packet->acc_z) / 9.80665f * acc_1G;
+				accSmooth[ROLL ]	= packet->acc_z / 9.80665f * acc_1G;
+				accSmooth[PITCH] 	= packet->acc_x / 9.80665f * acc_1G;
+				accSmooth[YAW  ]   	= -packet->acc_y / 9.80665f * acc_1G;
 
-				gyroData[ROLL ]		= swap_float(packet->gyro_x);
-				gyroData[PITCH]		= swap_float(packet->gyro_y);
-				gyroData[YAW  ]		= swap_float(packet->gyro_z);
+				gyroData[ROLL ]		= packet->gyro_z;
+				gyroData[PITCH]		= packet->gyro_x;
+				gyroData[YAW  ]		= packet->gyro_y;
 
 				if (gpsCycleCount == 20)
 				{
 					// Simulate 5Hz GPS update
 					gpsCycleCount = 0;
 
-					gps.coord[LAT] 		= swap_float(packet->lat) * 1e7;
-					gps.coord[LON] 		= swap_float(packet->lon) * 1e7;
-					gps.altitude		= swap_float(packet->alt) / 10.0f;
-					gps.speed			= swap_float(packet->groundspeed);
-					gps.ground_course 	= swap_float(packet->head) * 10;
+					gps.coord[LAT] 		= packet->lat * 1e7;
+					gps.coord[LON] 		= packet->lon * 1e7;
+					gps.altitude		= packet->alt * 100;
+					gps.speed			= packet->speed * 10;
+					gps.ground_course 	= RAD2DEG(packet->head) * 10;
 					gps.update 			= (gps.update == 1 ? 0 : 1);
 					gps.numSat 			= 12;
 					gps.hdop 			= 1;
@@ -271,7 +234,7 @@ portTASK_FUNCTION_PROTO(simTask, pvParameters)
     	if (++sendCycleCount == 5)
 		{
 			sendCycleCount = 0;
-			simSendTxt();
+			simSendPacket();
 		}
 
 	    // Wait for the next cycle.

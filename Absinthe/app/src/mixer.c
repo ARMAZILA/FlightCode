@@ -135,7 +135,7 @@ const mixer_t mixers[] = {
     { 8, 0, mixerOctoFlatX },      // MULTITYPE_OCTOFLATX
     { 1, 1, NULL },                // * MULTITYPE_AIRPLANE
     { 0, 1, NULL },                // * MULTITYPE_HELI_120_CCPM
-    { 0, 1, NULL },                // * MULTITYPE_HELI_90_DEG
+    { 1, 1, NULL },                // * MULTITYPE_HELI_90_DEG
     { 4, 0, mixerVtail4 },         // MULTITYPE_VTAIL4
     { 4, 0, mixerQuadC },          // MULTITYPE_QUAD_C
     { 0, 0, NULL },                // MULTITYPE_CUSTOM
@@ -232,6 +232,12 @@ void mixerWrite(void)
 			case MULTITYPE_GIMBAL:
 				pwmWrite(lastPWMoutput++, servo[0]);
 				pwmWrite(lastPWMoutput++, servo[1]);
+				break;
+
+			case MULTITYPE_HELI_90_DEG:
+				pwmWrite(lastPWMoutput++, servo[0]);
+				pwmWrite(lastPWMoutput++, servo[1]);
+				pwmWrite(lastPWMoutput++, servo[2]);
 				break;
 
 			default:
@@ -367,6 +373,12 @@ void mixerTable(void)
             servo[0] = constrain(servo[0] + cfg.wing_left_mid, cfg.wing_left_min, cfg.wing_left_max);
             servo[1] = constrain(servo[1] + cfg.wing_right_mid, cfg.wing_right_min, cfg.wing_right_max);
             break;
+
+        case MULTITYPE_HELI_90_DEG:
+            servo[0]  = axisPID[PITCH];
+            servo[1]  = axisPID[ROLL];
+            servo[2]  = axisPID[YAW];
+        	break;
     }
 
     // do camstab

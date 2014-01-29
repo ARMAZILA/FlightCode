@@ -15,6 +15,10 @@ int32_t accSum[3];
 uint32_t accTimeSum = 0;        		// keep track for integration of acc
 int32_t	accSumCount = 0;
 
+int32_t BaroAlt_fil;
+float vel_calc;
+float vel = 0.0f;
+
 // **************
 // Result IMU data
 // **************
@@ -66,7 +70,7 @@ void imuInit(void)
     int16_t deg, min;
 
     acc_25deg = acc_1G * 0.423f;
-    accVelScale = 9.80665f / acc_1G / 10000.0f;
+    accVelScale = 9.80665f / acc_1G;
 
     // Load from config and calculate magnetic declination
     deg = cfg.mag_declination / 100;
@@ -258,19 +262,17 @@ static void getEstimatedAttitude(void)
     float 			dT;
 
     // Calculate dT
-    dT = (currentT - previousT) * gyro_scale_us;
+    dT = (currentT - previousT);
     previousT = currentT;
 
     // Initialization
     for (axis = 0; axis < 3; axis++) {
-        deltaGyroAngle[axis] = gyro_sensor.data_deg[axis] * dT;
-        if (cfg.acc_lpf_factor > 0) {
-            accLPF[axis] = accLPF[axis] * (1.0f - (1.0f / cfg.acc_lpf_factor)) + acc_sensor.data_mw[axis] * (1.0f / cfg.acc_lpf_factor);
-            accSmooth[axis] = accLPF[axis];
-        } else {
-            accSmooth[axis] = acc_sensor.data_mw[axis];
-        }
-        accLPFVel[axis] = accLPFVel[axis] * (1.0f - (1.0f / cfg.acc_lpf_for_velocity)) + acc_sensor.data_mw[axis] * (1.0f / cfg.acc_lpf_for_velocity);
+        deltaGyroAngle[axis] = gyro_sensor.data_deg[axis] * dT * gyro_scale_us;
+
+        accLPF[axis] = accLPF[axis] * (1.0f - cfg.acc_lpf_factor) + acc_sensor.data_mw[axis] * cfg.acc_lpf_factor;
+        accSmooth[axis] = accLPF[axis];
+
+        accLPFVel[axis] = accLPFVel[axis] * (1.0f - cfg.acc_lpf_for_velocity) + acc_sensor.data_mw[axis] * cfg.acc_lpf_for_velocity;
         accMag += fsq(accSmooth[axis]);
     }
     accMag = accMag * 100.0f / isq(acc_1G);
@@ -585,9 +587,6 @@ void getEstimatedAltitude(void)
     int32_t error;
     int32_t baroVel;
     int32_t vel_tmp;
-    static int32_t BaroAlt_fil;
-    float vel_calc;
-    static float vel = 0.0f;
     static float accAlt = 0.0f;
     static int32_t lastBaroAlt;
 
@@ -598,7 +597,7 @@ void getEstimatedAltitude(void)
     vel += vel_calc;
 
     // Integrator - Altitude in cm
-    accAlt += vel * ((float) accTimeSum * 0.0000005f);                                  // integrate velocity to get distance (x= a/2 * t^2)
+    accAlt += vel * ((float) accTimeSum * 0.0000005f);                                  	// integrate velocity to get distance (x= a/2 * t^2)
     accAlt = accAlt * cfg.baro_cf_alt + (float) BaroAlt_fil *(1.0f - cfg.baro_cf_alt);      // complementary filter for Altitude estimation (baro & acc)
     EstAlt = accAlt;
 

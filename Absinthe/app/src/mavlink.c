@@ -74,6 +74,13 @@ static void ml_send_25Hz(mavlink_channel_t chan)
 #endif
 }
 
+extern int32_t BaroAlt_fil;
+extern float vel_calc;
+//extern float vel;
+extern int32_t accSum[];
+extern uint32_t accTimeSum;        		// keep track for integration of acc
+extern int32_t	accSumCount;
+
 static void ml_send_10Hz(mavlink_channel_t chan)
 {
 	if (m_parameter_i < valueTableCount)			// Sending parameters in progress
@@ -81,8 +88,13 @@ static void ml_send_10Hz(mavlink_channel_t chan)
 
 	if (cfg.mavlink_telemetry_flag & ML_TELEMETRY_NAMED_VALUE)
 	{
-//		mavlink_msg_named_value_int_send(chan, sysTickUptime, "BARO_PID", BaroPID);
-//		mavlink_msg_named_value_float_send(chan, sysTickUptime,	"RCRATE", rcRate);
+		mavlink_msg_named_value_int_send(chan, sysTickUptime, "ACC_SUM", accSum[2]);
+		mavlink_msg_named_value_int_send(chan, sysTickUptime, "ACC_T_SUM", accTimeSum);
+		mavlink_msg_named_value_int_send(chan, sysTickUptime, "ACC_SUM_C", accSumCount);
+		mavlink_msg_named_value_float_send(chan, sysTickUptime, "ALT_FIL_M", BaroAlt_fil / 100.0f);
+		mavlink_msg_named_value_float_send(chan, sysTickUptime,	"ALT_M", EstAlt / 100.0f);
+//		mavlink_msg_named_value_float_send(chan, sysTickUptime, "VEL", vel);
+		mavlink_msg_named_value_float_send(chan, sysTickUptime,	"VEL_CALC", vel_calc);
 	}
 
 	if (cfg.mavlink_telemetry_flag & ML_TELEMETRY_RC_CHANNELS_RAW)
