@@ -46,6 +46,11 @@ void sensorInit(void)
     if (lps331apDetect()) {
     	sensorsSet(SENSOR_BARO);
     }
+
+    if (bmp085_Detect())
+    {
+    	sensorsSet(SENSOR_BMP085);
+    }
 }
 
 /*
@@ -399,14 +404,46 @@ static void magSensorUpdate(void)
 
 static void baroSensorUpdate(void)
 {
+
 	float pressure, temperature, altitude;
 
 	lps331apRead(&pressure, &temperature);
+
     From_Pressure_mb_To_Altitude_cm(&pressure, &altitude);
 
     alt_sensor.baroPressure_mb = pressure;
 	alt_sensor.baroAlt = altitude;
 	alt_sensor.baroTemp = temperature * 10;
+}
+
+static void BMP085SensorUpdate(void)
+{
+
+	static bmp085_cycle = 0;
+	float pressure, temperature, altitude;
+
+	if(bmp085_cycle == 0)
+	{
+		bmp085_read_temperature(&temperature);
+		alt_sensor.baroTemp = temperature * 10;
+	}
+	else
+	{
+		BMP085Read(&pressure);
+		From_Pressure_mb_To_Altitude_cm(&pressure, &altitude);
+		alt_sensor.baroPressure_mb = pressure;
+		alt_sensor.baroAlt = altitude;
+	}
+	bmp085_cycle++;
+	if(bmp085_cycle == 10)
+	{
+		bmp085_cycle = 0;
+		bmp085_start_temperature();
+	}
+	else
+	{
+		bmp085_start_pressure();
+	}
 }
 
 /*
@@ -427,6 +464,7 @@ portTASK_FUNCTION_PROTO(sensorTask, pvParameters)
 	uint8_t		magSensorCycleCount = 0;
 	uint16_t	cycleTime;
 	uint16_t	sensorReadTime;
+
 
 	counters.sensorCycleCount	= 0;
 
@@ -452,17 +490,22 @@ portTASK_FUNCTION_PROTO(sensorTask, pvParameters)
 
 			// Read accel sensor data each cycle
 			accSensorUpdate();
-
-			if (sensors(SENSOR_BARO))
+			if (sensors(SENSOR_BMP085))
+			{
+				BMP085SensorUpdate();
+			}
+			else if (sensors(SENSOR_BARO))
 			{
 				// Baromert update rate 50 ms
 				if (++baroSensorCycleCount == 5)
 				{
 					baroSensorCycleCount = 0;
 					baroSensorUpdate();
-					getEstimatedAltitude();
+					//getEstimatedAltitude();
 				}
 			}
+			StabilizeAltPID();
+			//
 
 			// Magnitometer update rate 40 ms
 			if (++magSensorCycleCount == 4)
@@ -493,8 +536,10 @@ portTASK_FUNCTION_PROTO(sensorTask, pvParameters)
 
 		static uint32_t pTime;
 		uint32_t cTime = micros();
-		float dTime = (int32_t)(cTime - pTime) * 0.000001f;
+		float dTime = (float)(cTime - pTime) * 0.000001f;
 		pTime = cTime;
+
+		insAltUpdate(dTime);
 
 		stabilize(dTime);
 

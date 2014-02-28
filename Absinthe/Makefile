@@ -47,6 +47,7 @@ SRC_10dM3UOP88 = $(DIR_APP)/src/main.c \
 	$(DIR_APP)/src/imu.c \
 	$(DIR_APP)/src/MadgwickAHRS.c \
 	$(DIR_APP)/src/mavlink.c \
+	$(DIR_APP)/src/AltFilter.c \
 	$(DIR_APP)/src/mission.c \
 	$(DIR_APP)/src/mixer.c \
 	$(DIR_APP)/src/msp.c \
@@ -64,6 +65,7 @@ SRC_10dM3UOP88 = $(DIR_APP)/src/main.c \
 	$(DIR_DRV)/src/l3gd20.c \
 	$(DIR_DRV)/src/ledring.c \
 	$(DIR_DRV)/src/lps331ap.c \
+	$(DIR_DRV)/src/BMP085.c \
 	$(DIR_DRV)/src/lsm303dlhc.c \
 	$(DIR_DRV)/src/pwm.c \
 	$(DIR_DRV)/src/rtc.c \

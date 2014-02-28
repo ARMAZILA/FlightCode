@@ -136,6 +136,9 @@ void wdgInit(void)
 	  /* Disable TIM5 CC4 Interrupt Request */
 	  TIM_ITConfig(TIM5, TIM_IT_CC4, DISABLE);
 #endif
+
+	  DBGMCU->CR |=  DBGMCU_CR_DBG_IWDG_STOP; // Debug Independent Watchdog stopped when Core is halted
+
 	  /* Enable write access to IWDG_PR and IWDG_RLR registers */
 	  IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
 

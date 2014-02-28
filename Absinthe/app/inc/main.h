@@ -31,6 +31,7 @@
 #include "l3gd20.h"
 #include "ledring.h"
 #include "lps331ap.h"
+#include "BMP085.h"
 #include "lsm303dlhc.h"
 #include "pwm.h"
 #include "rtc.h"
@@ -103,6 +104,7 @@ typedef enum {
     SENSOR_MAG   = 1 << 2,
     SENSOR_SONAR = 1 << 3,
     SENSOR_GPS   = 1 << 4,
+    SENSOR_BMP085= 1 << 5,
 } AvailableSensors;
 
 // RC protocol
@@ -551,6 +553,8 @@ void computeIMU(void);
 void setAltHold(int32_t newAltitude);
 void getEstimatedAltitude(void);
 void imuAHRSupdate();
+void insAltUpdate(float dtime);
+void StabilizeAltPID();
 
 // Sensors
 extern counters_t 		counters;

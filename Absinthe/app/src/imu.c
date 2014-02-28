@@ -1,6 +1,7 @@
 
 #include "main.h"
 #include "MadgwickAHRS.h"
+#include "AltFilter.h"
 
 float accLPFVel[3];
 int16_t BaroPID = 0;
@@ -14,6 +15,14 @@ float 	invG;
 int32_t accSum[3];
 uint32_t accTimeSum = 0;        		// keep track for integration of acc
 int32_t	accSumCount = 0;
+
+float QQ = 0.05;
+float RR = 2.0f;
+
+#define AltStartCounterValue 750
+uint16_t AltStartCounter = AltStartCounterValue; //5 секунд на сведение  высоты
+float ZeroLevel;
+
 
 // **************
 // Result IMU data
@@ -77,6 +86,7 @@ void imuInit(void)
     Smoothing[ROLL ] = cfg.gyro_smooth[ROLL ];
     Smoothing[PITCH] = cfg.gyro_smooth[PITCH];
     Smoothing[YAW  ] = cfg.gyro_smooth[YAW  ];
+
 }
 
 void computeIMU(void)
@@ -335,6 +345,7 @@ static void getEstimatedAttitude(void)
     }
 
     acc_calc(dT); // rotate acc vector into earth frame
+
 }
 
 // ****** find roll, pitch, yaw from quaternion ********
@@ -391,7 +402,7 @@ void imuAHRSupdate()
     taskENTER_CRITICAL();
     imu.rpy_rad[ROLL ] = rpy[ROLL];
     imu.rpy_rad[PITCH] = rpy[PITCH];
-    imu.rpy_rad[YAW]      = rpy[YAW] + magneticDeclination;	    // Add Magnetic Declination to the course
+    imu.rpy_rad[YAW]   = rpy[YAW] + magneticDeclination;	    // Add Magnetic Declination to the course
 
     imu.rpy[ROLL ] = RAD2DEG(imu.rpy_rad[ROLL ]) * 10;
     imu.rpy[PITCH] = RAD2DEG(imu.rpy_rad[PITCH]) * 10;
@@ -403,6 +414,7 @@ void imuAHRSupdate()
     else if (imu.rpy[YAW] < -180)
         imu.rpy[YAW] = imu.rpy[YAW] + 360;
     taskEXIT_CRITICAL();
+
 }
 
 #if 0
@@ -571,6 +583,35 @@ void getEstimatedAltitude(void)
 }
 #endif
 
+void insAltUpdate(float dtime)
+{
+    //TODO: Add correctly
+    float accZ = (acc_sensor.data_mss[ROLL] * EstG.V.X + acc_sensor.data_mss[PITCH] * EstG.V.Y + acc_sensor.data_mss[YAW] * EstG.V.Z);
+    accZ /= sqrtf(EstG.V.X*EstG.V.X + EstG.V.Y*EstG.V.Y + EstG.V.Z*EstG.V.Z);
+    accZ -= 9.8056;
+
+    if(isnan(alt_sensor.baroAlt))
+    	return;
+	if(AltStartCounter)
+	{
+		if(flag(FLAG_WDG_OCCURRED))
+		{
+			AltStartCounter-=20;
+
+		}
+		else
+		{
+			AltStartCounter--;
+		}
+		ZeroLevel = (uint32_t)100.0f*AltFilterStep(dtime, QQ, RR*10*(0.1 + AltStartCounter/AltStartCounterValue), 0.01f*alt_sensor.baroAlt, accZ);
+	}
+	else
+		EstAlt = - ZeroLevel + (uint32_t)100.0f*AltFilterStep(dtime, QQ, RR, 0.01f*alt_sensor.baroAlt, accZ);
+
+
+    vario = (uint32_t)100.0f*AltFilterGetVario();
+}
+
 
 void setAltHold(int32_t newAltidude)
 {
@@ -593,6 +634,7 @@ void getEstimatedAltitude(void)
 
     BaroAlt_fil = BaroAlt_fil * cfg.baro_noise_lpf + alt_sensor.baroAlt * (1.0f - cfg.baro_noise_lpf); // additional LPF to reduce baro noise
 
+
     // Integrator - velocity, cm/sec
     vel_calc = (float) accSum[2] * accVelScale * (float) accTimeSum / (float) accSumCount;
     vel += vel_calc;
@@ -600,7 +642,7 @@ void getEstimatedAltitude(void)
     // Integrator - Altitude in cm
     accAlt += vel * ((float) accTimeSum * 0.0000005f);                                  // integrate velocity to get distance (x= a/2 * t^2)
     accAlt = accAlt * cfg.baro_cf_alt + (float) BaroAlt_fil *(1.0f - cfg.baro_cf_alt);      // complementary filter for Altitude estimation (baro & acc)
-    EstAlt = accAlt;
+    //EstAlt = accAlt;
 
 #if 1
     debug[0] = accSum[2] / accSumCount; // acceleration
@@ -638,4 +680,18 @@ void getEstimatedAltitude(void)
     BaroPID -= constrain(cfg.D8[PIDALT] * vel_tmp / 16, -150, 150);
 
     return;
+}
+
+
+void StabilizeAltPID()
+{
+	int32_t error;
+	error = constrain(altitudeHold - EstAlt, -300, 300); // in cm
+	BaroPID = constrain((cfg.P8[PIDALT] * error / 128), -150, +150);
+
+	errorAltitudeI += cfg.I8[PIDALT] * error / 64;
+	errorAltitudeI = constrain(errorAltitudeI, -30000, 30000);
+	BaroPID += errorAltitudeI / 512;     // I in range +/-60
+
+	BaroPID -= constrain(cfg.D8[PIDALT] * vario / 16, -150, 150);
 }
