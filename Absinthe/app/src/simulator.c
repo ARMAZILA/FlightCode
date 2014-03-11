@@ -59,17 +59,14 @@ static bool simParseChar(uint8_t c, char * inBuf)
 	sequence &= 0xFFFFFF00;
 	sequence |= c;
 
-	if(sequence == 0x0000C0FF)
+	if (sequence == 0x0000C0FF)
 		bufferIndex = 0;
-	else
-		if(bufferIndex < sizeof(sim_pack_in_t))
-		{
-			inBuf[bufferIndex++] = c;
-			if (bufferIndex == sizeof(sim_pack_in_t))
-					{
-						return true;
-					}
-		}
+	else if (bufferIndex < sizeof(sim_pack_in_t))
+	{
+		inBuf[bufferIndex++] = c;
+		if (bufferIndex == sizeof(sim_pack_in_t))
+			return true;
+	}
 
 	return false;
 }
@@ -93,7 +90,7 @@ typedef union {
 // Format: Heading, Roll, Pitch, Yaw, Throttle, debug1, debug2
 static void simSendPacket(void)
 {
-	static Param32 p;
+	Param32 p;
 
 	switch(cfg.mixerConfiguration)
 	{
@@ -241,4 +238,3 @@ portTASK_FUNCTION_PROTO(simTask, pvParameters)
 		vTaskDelayUntil(&xLastWakeTime, 10); 	// Task cycle rate 100 Hz
 	}
 }
-
