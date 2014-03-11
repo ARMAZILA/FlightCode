@@ -154,7 +154,7 @@ const param_value_t valueTable[] = {
     { "PID_Y_D", 		VAR_UINT8, 	&cfg.D8[YAW], 0, 200 },
     { "PID_ALT_P", 		VAR_UINT8, 	&cfg.P8[PIDALT], 0, 200 },
     { "PID_ALT_I", 		VAR_UINT8, 	&cfg.I8[PIDALT], 0, 200 },
-    { "PID_ALT_I", 		VAR_UINT8, 	&cfg.D8[PIDALT], 0, 200 },
+    { "PID_ALT_D", 		VAR_UINT8, 	&cfg.D8[PIDALT], 0, 200 },
     { "PID_LEVEL_P", 	VAR_UINT8, 	&cfg.P8[PIDLEVEL], 0, 200 },
     { "PID_LEVEL_I", 	VAR_UINT8, 	&cfg.I8[PIDLEVEL], 0, 200 },
     { "PID_LEVEL_D", 	VAR_UINT8, 	&cfg.D8[PIDLEVEL], 0, 200 },

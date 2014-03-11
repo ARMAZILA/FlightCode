@@ -45,10 +45,12 @@ void sensorInit(void)
     // Detect pressure sensor
     if (lps331apDetect()) {
     	sensorsSet(SENSOR_BARO);
+    	sensorsSet(SENSOR_LPS331);
     }
 
     if (bmp085_Detect())
     {
+    	sensorsSet(SENSOR_BARO);
     	sensorsSet(SENSOR_BMP085);
     }
 }
@@ -402,7 +404,7 @@ static void magSensorUpdate(void)
     mag_sensor_data[YAW  ] = mag[YAW  ];
 }
 
-static void baroSensorUpdate(void)
+static void baroSensorUpdate(void)//LPS331
 {
 
 	float pressure, temperature, altitude;
@@ -494,7 +496,7 @@ portTASK_FUNCTION_PROTO(sensorTask, pvParameters)
 			{
 				BMP085SensorUpdate();
 			}
-			else if (sensors(SENSOR_BARO))
+			else if (sensors(SENSOR_LPS331))
 			{
 				// Baromert update rate 50 ms
 				if (++baroSensorCycleCount == 5)

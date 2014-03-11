@@ -19,10 +19,13 @@ int32_t	accSumCount = 0;
 float QQ = 0.05;
 float RR = 2.0f;
 
-#define AltStartCounterValue 750
+#define AltStartCounterValue 250
 uint16_t AltStartCounter = AltStartCounterValue; //5 секунд на сведение  высоты
 float ZeroLevel;
 
+#ifdef	__BARO_ALT_DEBUG_
+	float DebugArr[AltStartCounterValue];
+#endif
 
 // **************
 // Result IMU data
@@ -589,6 +592,7 @@ void insAltUpdate(float dtime)
     float accZ = (acc_sensor.data_mss[ROLL] * EstG.V.X + acc_sensor.data_mss[PITCH] * EstG.V.Y + acc_sensor.data_mss[YAW] * EstG.V.Z);
     accZ /= sqrtf(EstG.V.X*EstG.V.X + EstG.V.Y*EstG.V.Y + EstG.V.Z*EstG.V.Z);
     accZ -= 9.8056;
+    float K = (float)AltStartCounter/AltStartCounterValue;
 
     if(isnan(alt_sensor.baroAlt))
     	return;
@@ -603,11 +607,18 @@ void insAltUpdate(float dtime)
 		{
 			AltStartCounter--;
 		}
-		ZeroLevel = (uint32_t)100.0f*AltFilterStep(dtime, QQ, RR*10*(0.1 + AltStartCounter/AltStartCounterValue), 0.01f*alt_sensor.baroAlt, accZ);
-	}
-	else
-		EstAlt = - ZeroLevel + (uint32_t)100.0f*AltFilterStep(dtime, QQ, RR, 0.01f*alt_sensor.baroAlt, accZ);
+		if((AltStartCounterValue - AltStartCounter) > 10)
+		{
+			ZeroLevel = ZeroLevel*(1 - K) + K*alt_sensor.baroAlt;
 
+		}
+#ifdef	__BARO_ALT_DEBUG_
+		DebugArr[AltStartCounter] = alt_sensor.baroAlt;
+#endif
+		//ZeroLevel = (uint32_t)100.0f*AltFilterStep(dtime, QQ, RR*10*(1.1 - AltStartCounter/AltStartCounterValue), 0.01f*alt_sensor.baroAlt, accZ);
+	}
+	//else
+	EstAlt = - ZeroLevel + (uint32_t)100.0f*AltFilterStep(dtime, QQ, RR, 0.01f*alt_sensor.baroAlt, accZ);
 
     vario = (uint32_t)100.0f*AltFilterGetVario();
 }
@@ -691,7 +702,7 @@ void StabilizeAltPID()
 
 	errorAltitudeI += cfg.I8[PIDALT] * error / 64;
 	errorAltitudeI = constrain(errorAltitudeI, -30000, 30000);
-	BaroPID += errorAltitudeI / 512;     // I in range +/-60
+	BaroPID += errorAltitudeI / 256;     // I in range +/-60
 
 	BaroPID -= constrain(cfg.D8[PIDALT] * vario / 16, -150, 150);
 }

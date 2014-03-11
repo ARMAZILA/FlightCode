@@ -105,6 +105,7 @@ typedef enum {
     SENSOR_SONAR = 1 << 3,
     SENSOR_GPS   = 1 << 4,
     SENSOR_BMP085= 1 << 5,
+    SENSOR_LPS331= 1 << 6,
 } AvailableSensors;
 
 // RC protocol
