@@ -262,6 +262,7 @@ void writeFlashConfig(uint8_t b)
 
     cfg.chk = chk;
 
+    taskENTER_CRITICAL();
     // write it
 retry:
 	FLASH_Unlock();
@@ -281,6 +282,8 @@ retry:
 		}
 	}
 	FLASH_Lock();
+
+	taskEXIT_CRITICAL();
 
 	// Flash write failed - just die now
 	if (tries == 3 || !validFlashConfig()) {
@@ -369,7 +372,7 @@ static void resetFlashConfig(void)
     cfg.gyro_bias[ROLL ]		= 0.0f;
     cfg.gyro_bias[PITCH]		= 0.0f;
     cfg.gyro_bias[YAW  ]		= 0.0f;
-    cfg.gyro_scale[ROLL ] 		= 0.07f;	// Gyro FS=2000 dps, Sensitivity = 70 mdps/lsb (L3GD20)
+    cfg.gyro_scale[ROLL ] 		= 0.07f;	// Gyro FS=2000 dps, Sensitivity = 70 mdps/lsb (L3DG20)
     cfg.gyro_scale[PITCH] 		= 0.07f;
     cfg.gyro_scale[YAW  ] 		= 0.07f;
     cfg.gyro_temp_comp[ROLL ] 	= 0.0f;		// Gyro temperature compensation factor
