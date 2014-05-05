@@ -567,11 +567,33 @@ portTASK_FUNCTION_PROTO(navigateTask, pvParameters)
 	xLastWakeTime = xTaskGetTickCount();
 #endif
 
+	uint16_t naviCycleTime = -1;
+	uint16_t naviCycleTimeMAX = 0;
+	uint16_t naviCycleTimeMIN = -1;
+
 	while (1)
     {
 		xSemaphoreTake(gpsSemaphore, portMAX_DELAY);
 
+
+		uint32_t sTime, eTime;
+		uint16_t CycleTime;
+
+		sTime = micros();
 		gps_navigate();
+
+		eTime = micros();
+
+		CycleTime = eTime - sTime;
+		if( CycleTime > naviCycleTimeMAX )
+		naviCycleTimeMAX = CycleTime;
+		if( CycleTime < naviCycleTimeMIN )
+				naviCycleTimeMIN = CycleTime;
+		// NAVI Cicle Time
+		if((naviCycleTime+1) == 0)
+			naviCycleTime = CycleTime;
+		else
+			naviCycleTime = ((CycleTime) + naviCycleTime * 31)>>5;
 
 #if 0
 		// Wait for the next cycle.

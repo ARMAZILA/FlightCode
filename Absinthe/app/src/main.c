@@ -114,10 +114,10 @@ portTASK_FUNCTION_PROTO(initTask, pvParameters)
 	/* Initialize other tasks */
 	//			Task_func				        Task_name   Stack	   	 Param	 Prio			 Handler
 	xTaskCreate(sensorTask,  	 (signed char *) "Sensor",  256, (void *) NULL,  4, (xTaskHandle *) NULL);
-	xTaskCreate(rcLoopTask,  	 (signed char *) "rcLoop",  256, (void *) NULL,  3, (xTaskHandle *) NULL);
+	xTaskCreate(rcLoopTask,  	 (signed char *) "rcLoop",  256, (void *) NULL,  4, (xTaskHandle *) NULL);
 	xTaskCreate(osdTask,     	 (signed char *) "OSD",     256, (void *) NULL,  1, (xTaskHandle *) NULL);
-	xTaskCreate(sonarTask,       (signed char *) "Sonar",    48, (void *) NULL,  2, (xTaskHandle *) NULL);
-	xTaskCreate(powerSensorTask, (signed char *) "PwrSen",   48, (void *) NULL,  2, (xTaskHandle *) NULL);
+	xTaskCreate(sonarTask,       (signed char *) "Sonar",    48, (void *) NULL,  4, (xTaskHandle *) NULL);
+	xTaskCreate(powerSensorTask, (signed char *) "PwrSen",   48, (void *) NULL,  3, (xTaskHandle *) NULL);
 	xTaskCreate(navigateTask,  	 (signed char *) "Navi",    256, (void *) NULL,  3, (xTaskHandle *) NULL);
 
 	/* Initialize FrSky telemetry task */
