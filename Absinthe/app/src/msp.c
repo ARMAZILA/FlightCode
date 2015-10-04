@@ -477,9 +477,9 @@ static uint8_t	 			msp_Rx_Buffer[MSP_RX_BUFFER_SIZE];
 
 /* UART helper functions */
 static void mspCallback(uint16_t data)	{ fifoBuf_putByte(&msp_Rx_Buffer_Hnd, data); }
-static uint16_t mspHasData(void)		{ return (fifoBuf_getUsed(&msp_Rx_Buffer_Hnd) == 0) ? false : true; }
-static uint8_t mspRead(void)			{ return fifoBuf_getByte(&msp_Rx_Buffer_Hnd); }
-static void mspWrite(uint8_t data)		{ uartWrite(MSP_UART, data); }
+uint16_t mspHasData(void)				{ return (fifoBuf_getUsed(&msp_Rx_Buffer_Hnd) == 0) ? false : true; }
+uint8_t mspRead(void)					{ return fifoBuf_getByte(&msp_Rx_Buffer_Hnd); }
+void mspWrite(uint8_t data)				{ uartWrite(MSP_UART, data); }
 
 portTASK_FUNCTION_PROTO(mspTask, pvParameters)
 {
@@ -503,6 +503,8 @@ portTASK_FUNCTION_PROTO(mspTask, pvParameters)
 		com_drv[0].rx = vcp1GetByte;
 		com_drv[0].tx = vcp1SendByte;
 	}
+
+	cliInit();
 
 	// Initialise the xLastWakeTime variable with the current time.
 	xLastWakeTime = xTaskGetTickCount();

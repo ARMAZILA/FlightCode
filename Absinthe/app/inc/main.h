@@ -578,10 +578,12 @@ void mixerWwriteAllMotors(int16_t mc);
 void mixerTable(void);
 void mixerWrite();
 
-// Serial
-void serialInit(uint32_t baudrate);
+// MSP
 void serialCom(void);
 portTASK_FUNCTION_PROTO(mspTask, pvParameters);
+uint16_t mspHasData(void);
+uint8_t mspRead(void);
+void mspWrite(uint8_t data);
 
 // Config
 extern config_t cfg;
@@ -618,6 +620,7 @@ portTASK_FUNCTION_PROTO(signalTask, pvParameters);
 // cli
 void cliProcess(void);
 char *ftoa(float x, char *floatString);
+void cliInit(void);
 
 // gps
 extern gps_sensor_t gps;

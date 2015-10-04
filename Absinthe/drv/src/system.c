@@ -97,12 +97,6 @@ uint32_t millis(void)
     return sysTickUptime;
 }
 
-
-static void _putc(void *p, char c)
-{
-	vcp1SendByte(c);
-}
-
 void systemInit(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -126,9 +120,6 @@ void systemInit(void)
 
     /* Configure TIM6 & TIM7 */
     sysTimerConfig();
-
-    /* redirect printf to USB VCP */
-    init_printf(NULL, _putc);
 }
 
 #if 1

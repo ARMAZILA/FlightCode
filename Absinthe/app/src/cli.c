@@ -60,6 +60,9 @@ static void cliBeep(char *cmdline);
 static char cliBuffer[48];
 static uint32_t bufferIndex = 0;
 
+serialReadByte_t rx;
+serialHasData_t da;	// Data Available
+
 static float _atof(const char *p);
 char *ftoa(float x, char *floatString);
 
@@ -103,13 +106,6 @@ const clicmd_t cmdTable[] = {
 
 static void cliSetVar(const param_value_t *var, const int32_t value);
 static void cliPrintVar(const param_value_t *var, uint32_t full);
-
-
-void printf_s(char *str)
-{
-    while (*str)
-    	vcp1SendByte(*(str++));
-}
 
 #ifndef HAVE_ITOA_FUNCTION
 
@@ -825,9 +821,9 @@ void cliProcess(void)
         cliPrompt();
     }
 
-    while (vcp1HasData())
+    while (da())
     {
-        uint8_t c = vcp1GetByte();
+        uint8_t c = rx();
         if (c == KEY_HT || c == '?')
         {
             // do tab completion
@@ -860,12 +856,12 @@ void cliProcess(void)
                 for (cmd = pstart; cmd <= pend; cmd++)
                 {
                     printf(cmd->name);
-                    vcp1SendByte('\t');
+                    printf("\t");
                 }
                 cliPrompt();
                 i = 0;    /* Redraw prompt */
             }
-            for (; i < bufferIndex; i++) vcp1SendByte(cliBuffer[i]);
+            for (; i < bufferIndex; i++) printf("%c", cliBuffer[i]);
         } else if (!bufferIndex && c == 4)
         {
             cliExit(cliBuffer);
@@ -912,7 +908,40 @@ void cliProcess(void)
 		{
 			if (!bufferIndex && c == 32) continue;
 			cliBuffer[bufferIndex++] = c;
-			vcp1SendByte(c);
+			printf("%c", c);
 		}
     }
 }
+
+static void vcp1Write(void *p, char c)
+{
+	vcp1SendByte(c);
+}
+
+static void uart1Write(void *p, char data)
+{
+	mspWrite(data);
+}
+
+void cliInit(void)
+{
+	if (cfg.port_map == PORT_MAP_UART1xMSP_VCP1xSIM_VCP2xMAVLINK)
+	{
+		/* redirect cli to UART1 */
+		da = mspHasData;
+		rx = mspRead;
+
+		/* redirect printf to UART1 */
+		init_printf(NULL, uart1Write);
+	}
+	else
+	{
+		/* redirect cli to USB VCP1 */
+		da = vcp1HasData;
+		rx = vcp1GetByte;
+
+		/* redirect printf to USB VCP1 */
+		init_printf(NULL, vcp1Write);
+	}
+}
+

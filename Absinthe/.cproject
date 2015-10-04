@@ -5,17 +5,21 @@
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.toolchain.base.1046225446" moduleId="org.eclipse.cdt.core.settings" name="Default">
 				<externalSettings/>
 				<extensions>
+					<extension id="org.eclipse.cdt.core.GNU_ELF" point="org.eclipse.cdt.core.BinaryParser"/>
 					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
-					<extension id="org.eclipse.cdt.core.GNU_ELF" point="org.eclipse.cdt.core.BinaryParser"/>
+					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.MakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.VCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.autotools.core.ErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 				<configuration buildProperties="" description="" id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.toolchain.base.1046225446" name="Default" parent="org.eclipse.cdt.build.core.emptycfg">
 					<folderInfo id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.toolchain.base.1046225446.1670937669" name="/" resourcePath="">
-						<toolChain id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.toolchain.base.209106136" name="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.toolchain.base" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.toolchain.base">
+						<toolChain id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.toolchain.base.209106136" name="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.toolchain.base">
 							<option id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.target.processor.179378396" name="Processor" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.target.processor"/>
 							<option id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.target.architecture.10828645" name="Architecture" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.target.architecture"/>
 							<option id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.target.thumb.309924253" name="Thumb (-mthumb)" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.target.thumb"/>
@@ -32,35 +36,35 @@
 							<option id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.addtools.createflash.1354911781" name="Create Flash Image" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.addtools.createflash"/>
 							<option id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.addtools.createlisting.173538707" name="Create Extended Listing" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.addtools.createlisting"/>
 							<option id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.addtools.printsize.850107657" name="Print Size" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.option.addtools.printsize"/>
-							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.GNU_ELF" id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.platform.base.1005678027" isAbstract="false" name="Windows Platform" osList="win32" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.platform.base"/>
-							<builder id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.builder.base.1745258146" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="ARM Windows GNU Make builder (Sourcery Lite Bare)" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.builder.base"/>
-							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.assembler.base.743620347" name="ARM Windows GCC Assembler (Sourcery Lite Bare)" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.assembler.base">
+							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.GNU_ELF" id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.platform.base.1005678027" isAbstract="false" name="Windows Platform" osList="win32"/>
+							<builder id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.builder.base.1745258146" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="ARM Windows GNU Make builder (Sourcery Lite Bare)"/>
+							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.assembler.base.743620347" name="ARM Windows GCC Assembler (Sourcery Lite Bare)">
 								<option id="org.eclipse.cdt.cross.arm.gnu.assembler.option.preprocessor.def.1977993047" name="Defined symbols (-D)" superClass="org.eclipse.cdt.cross.arm.gnu.assembler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="STM32F10X_HD"/>
 									<listOptionValue builtIn="false" value="USE_STDPERIPH_DRIVER"/>
 								</option>
-								<inputType id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.assembler.base.input.1352253533" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.assembler.base.input"/>
+								<inputType id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.assembler.base.input.1352253533"/>
 							</tool>
-							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.c.compiler.base.549985867" name="ARM Windows GCC C Compiler (Sourcery Lite Bare)" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.c.compiler.base">
+							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.c.compiler.base.549985867" name="ARM Windows GCC C Compiler (Sourcery Lite Bare)">
 								<option id="org.eclipse.cdt.cross.arm.gnu.c.compiler.option.preprocessor.def.457103375" name="Defined symbols (-D)" superClass="org.eclipse.cdt.cross.arm.gnu.c.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="STM32F10X_HD"/>
 									<listOptionValue builtIn="false" value="USE_STDPERIPH_DRIVER"/>
 								</option>
-								<inputType id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.c.compiler.base.input.2004206778" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.c.compiler.base.input"/>
+								<inputType id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.c.compiler.base.input.2004206778"/>
 							</tool>
-							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.cpp.compiler.base.2022407740" name="ARM Windows GCC C++ Compiler (Sourcery Lite Bare)" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.cpp.compiler.base">
+							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.cpp.compiler.base.2022407740" name="ARM Windows GCC C++ Compiler (Sourcery Lite Bare)">
 								<option id="org.eclipse.cdt.cross.arm.gnu.cpp.compiler.option.preprocessor.def.2060947811" name="Defined symbols (-D)" superClass="org.eclipse.cdt.cross.arm.gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="STM32F10X_HD"/>
 									<listOptionValue builtIn="false" value="USE_STDPERIPH_DRIVER"/>
 								</option>
-								<inputType id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.cpp.compiler.base.input.1964541447" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.cpp.compiler.base.input"/>
+								<inputType id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.cpp.compiler.base.input.1964541447"/>
 							</tool>
-							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.c.linker.base.778185725" name="ARM Windows GCC C Linker (Sourcery Lite Bare)" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.c.linker.base"/>
-							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.cpp.linker.base.1156650580" name="ARM Windows GCC C++ Linker (Sourcery Lite Bare)" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.cpp.linker.base"/>
-							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.archiver.base.529575785" name="ARM Windows GCC Archiver (Sourcery Lite Bare)" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.archiver.base"/>
-							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.createflash.base.1987515873" name="ARM Windows GNU Create Flash Image (Sourcery Lite Bare)" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.createflash.base"/>
-							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.createlisting.base.1951425317" name="ARM Windows GNU Create Listing (Sourcery Lite Bare)" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.createlisting.base"/>
-							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.printsize.base.1646577156" name="ARM Windows GNU Print Size (Sourcery Lite Bare)" superClass="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.printsize.base"/>
+							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.c.linker.base.778185725" name="ARM Windows GCC C Linker (Sourcery Lite Bare)"/>
+							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.cpp.linker.base.1156650580" name="ARM Windows GCC C++ Linker (Sourcery Lite Bare)"/>
+							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.archiver.base.529575785" name="ARM Windows GCC Archiver (Sourcery Lite Bare)"/>
+							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.createflash.base.1987515873" name="ARM Windows GNU Create Flash Image (Sourcery Lite Bare)"/>
+							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.createlisting.base.1951425317" name="ARM Windows GNU Create Listing (Sourcery Lite Bare)"/>
+							<tool id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.printsize.base.1646577156" name="ARM Windows GNU Print Size (Sourcery Lite Bare)"/>
 						</toolChain>
 					</folderInfo>
 				</configuration>
@@ -141,4 +145,6 @@
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.cross.arm.gnu.ARM_CS_GCCWinManagedMakePerProjectProfileC"/>
 		</scannerConfigBuildInfo>
 	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
+	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 </cproject>
