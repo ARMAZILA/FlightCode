@@ -21,6 +21,14 @@ uint16_t 		acc_1G = 256;  			// this is the 1G measured acceleration.
 //extern uint16_t AccInflightCalibrationSavetoEEProm;
 //extern uint16_t AccInflightCalibrationActive;
 
+// Switch axis X <-> Z
+static void sensorSwitchAxis(int16_t * data)
+{
+	int16_t temp = data[0];
+	data[0] = data[2];
+	data[2] = temp;
+}
+
 void sensorInit(void)
 {
 	if (!l3gd20Detect()) {
@@ -113,6 +121,8 @@ static void accSensorUpdate(void)
 	for (i = 0; i < count; i++)
 	{
 		lsm303dlhcReadAcc(accel);
+
+		sensorSwitchAxis(accel);
 
 		// Counts raw data gyroscope
 		acc_sensor.sample_count ++;
@@ -277,6 +287,8 @@ static void gyroSensorUpdate(void)
 	{
 		l3gd20Read(gyro);
 
+		sensorSwitchAxis(gyro);
+
 		// Counts raw gyroscope data
 		gyro_sensor.sample_count ++;
 
@@ -357,6 +369,8 @@ static void magSensorUpdate(void)
     // Read 3-axis mag values
     lsm303dlhcReadMag(mag);
 
+    sensorSwitchAxis(mag);
+
 #define MAG_CALIBRATING_CYCLE 	750
 
     if (flag(FLAG_CALIBRATE_MAG))
@@ -421,7 +435,7 @@ static void baroSensorUpdate(void)//LPS331
 static void BMP085SensorUpdate(void)
 {
 
-	static bmp085_cycle = 0;
+	static uint16_t bmp085_cycle = 0;
 	float pressure, temperature, altitude;
 
 	if(bmp085_cycle == 0)
